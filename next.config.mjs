@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['localhost'],  // Add localhost here
+        domains: ['v4.jimatlabs.com', 'localhost'],  // Add localhost here
       },
 };
 
