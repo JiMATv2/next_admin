@@ -3,8 +3,10 @@ import { Suspense } from 'react'
 
 import { Button } from '@/components/ui/button'
 
+
 export default function Home() {
   return (
+
     <div className="flex h-screen bg-gray-100">
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex justify-between items-center mb-6">
@@ -19,5 +21,6 @@ export default function Home() {
         </Suspense>
       </div>
     </div>
+ 
   )
 }

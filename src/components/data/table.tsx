@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
+import ModelProvider, { useModel } from '@/lib/provider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,13 +21,41 @@ import { genInputs } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 import { useAuth } from '@/lib/auth'
+import { ImageIcon, PlusIcon } from 'lucide-react'
+import Link from 'next/link'
 
 // Assuming these are defined in your environment variables
 
 const url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
+// Type for custom columns
+interface CustomCol {
+  title: string;
 
+  list: (string | {
+    label: string
+    hidden?: boolean
+    value?: any
+    selection?: string
+    customCols?: any
+    search_queries?: string[]
+    newData?: string
+    title_key?: string
+    boolean?: boolean
+    editor?: boolean
+    editor2?: boolean
+    upload?: boolean
+  } | CustomSubCol)[]
+}
+interface CustomSubCol {
+  label: string;
+  customCols?: CustomCol[] | null;
+  selection: string;
+  search_queries: string[];
+  newData: string;
+  title_key: string;
+}
 interface DataTableProps {
-  appendQueries?: Record<string, string>
+  appendQueries?: Record<any, any>
   showNew?: boolean
   canDelete?: boolean
   search_queries?: string[]
@@ -37,28 +67,18 @@ interface DataTableProps {
     href?: (item: any) => string
     showCondition?: (item: any) => boolean
   }[]
-  customCols?: {
-    title: string
-    list: (string | {
-      label: string
-      hidden?: boolean
-      value?: any
-      selection?: string
-      customCols?: any
-      search_queries?: string[]
-      newData?: string
-      title_key?: string
-      boolean?: boolean
-      upload: boolean
-    })[]
-  }[]
+  customCols?: CustomCol[];
+
   columns: {
     label: string
     data: string
     formatDateTime?: boolean
     offset?: number
     isBadge?: boolean
-    color?: { key: string, value: string }[]
+    showImg?: boolean
+    showPreview?: boolean
+    showDateTime?: boolean
+    color?: { key: string | boolean, value: string }[]
     through?: string[]
   }[]
 }
@@ -74,10 +94,11 @@ export default function DataTable({
   customCols = [],
   columns
 }: DataTableProps) {
-  const { user, logout } = useAuth()
 
-  console.log(user)
+
+
   const [items, setItems] = useState<any[]>([])
+  const { data, setData } = useModel();
   const [colInputs, setColInputs] = useState<any[]>([]) // State to hold colInputs
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
@@ -89,6 +110,10 @@ export default function DataTable({
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [previewModal, setPreviewModal] = useState(false)
+  const [imgUrl, setImgUrl] = useState<string | null>(null)
+
   let selectedData = {};
   const itemsPerPage = 100
 
@@ -101,11 +126,20 @@ export default function DataTable({
     fetchColInputs();
   }, []);
 
-  const buildSearchString = useCallback((query: Record<string, string>) => {
-    const slist = Object.entries(query)
-      .filter(([_, value]) => value)
-      .map(([key, value]) => `${key}=${value}`)
-    return slist.join('|') || search_queries.join('|')
+  const buildSearchString = useCallback((query: any) => {
+
+    console.log(query)
+
+    if (Object.keys(query).length == 0) {
+      return null
+    } else {
+      const slist = Object.entries(query)
+        .filter(([_, value]) => value)
+        .map(([key, value]) => `${key}=${value}`)
+      return slist.join('|') || search_queries.join('|')
+    }
+
+
   }, [search_queries])
 
   function buildQueryString(data: any, parentKey: any) {
@@ -160,6 +194,7 @@ export default function DataTable({
 
       const dataList = await response.json();
       setItems(dataList.data);
+      setData(dataList.data);
       setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
     } catch (error) {
       console.error('An error occurred', error);
@@ -172,17 +207,19 @@ export default function DataTable({
   );
 
 
+
   useEffect(() => {
-    fetchData(currentPage)
-  }, [currentPage, searchQuery]) // Remove fetchData as a dependency
+    fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
+  }, [currentPage, searchQuery]); // Trigger only when these states change
 
 
   const handleSearch = () => {
-    setCurrentPage(1)
-    fetchData(1)
-  }
+    setCurrentPage(1); // Only set the current page to 1, let useEffect handle the API call
+  };
+
+
   const handleNew = () => {
-    setSelectedItem({id: 0})
+    setSelectedItem({...{ id: "0" }, ...appendQueries})
     setIsModalOpen(true)
 
   }
@@ -211,21 +248,160 @@ export default function DataTable({
     setConfirmModalFunction(() => fn)
   }
 
-  const renderCell = (item: any, column: any) => {
+
+  interface Column {
+    data: string
+    subtitle?: { data: string }
+    showPreview?: boolean
+    formatDate?: boolean
+    formatDateTime?: boolean
+    through?: string[]
+    color?: { key: string | boolean; value: string }[]
+    showImg?: boolean
+    isBadge?: boolean
+    offset?: number
+  }
+
+  const renderCell = (item: any, column: Column) => {
+
+    const url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT
+
+    const badgeColor = (value: string | boolean, conditionList: { key: string | boolean; value: string }[]) => {
+      const result = conditionList.find(v => v.key === value)
+      console.log(result)
+      return result ? result.value : 'destructive'
+    }
+
+    const checkAssoc = (data: any, val: string, through: string[]) => {
+      try {
+        return data[through[0]] ? data[through[0]][val] : ''
+      } catch (e) {
+        return ''
+      }
+    }
+
+    const formatDate = (date: string, offset: number = 0) => {
+      const dt = new Date(date)
+      dt.setTime(dt.getTime() + offset * 60 * 60 * 1000)
+      return dt.toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    }
+
+    const formatDateTime = (date: string, offset: number = 0) => {
+      const dt = new Date(date)
+      dt.setTime(dt.getTime() + offset * 60 * 60 * 1000)
+      return dt.toLocaleString('en-GB', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    }
+
     let value = item[column.data]
-    if (column.through) {
-      value = column.through.reduce((acc: any, key: string) => acc && acc[key], item)
+
+    if (column.subtitle) {
+      return (
+        <>
+          {value}
+          <br />
+          <small className="font-extralight dark:text-white">
+            {item[column.subtitle.data]}
+          </small>
+        </>
+      )
     }
+
+    if (column.showPreview) {
+      return (
+        <>
+          <Button
+            onClick={() => {
+              setImgUrl(value)
+              setPreviewModal(true)
+            }}
+            disabled={!value}
+          >
+            Preview
+          </Button>
+          <Dialog open={previewModal} onOpenChange={setPreviewModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Preview</DialogTitle>
+              </DialogHeader>
+              {imgUrl && (
+                <Image src={`${url}${imgUrl}`} alt="Preview" width={1200} height={700} />
+              )}
+            </DialogContent>
+          </Dialog>
+        </>
+      )
+    }
+
+    if (column.formatDate) {
+      return formatDate(value, column.offset)
+    }
+
     if (column.formatDateTime) {
-      // Implement date formatting
-      const date = new Date(value)
-      value = date.toLocaleString('en-US', { timeZone: 'UTC' })
+      return formatDateTime(value, column.offset)
     }
+
+    if (column.through) {
+      return checkAssoc(item, column.data, column.through)
+    }
+
+    if (column.color) {
+      console.log(column)
+      console.log(value)
+      return (
+        <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
+          {value ? 'Yes' : 'No'}
+        </Badge>
+      )
+    }
+
+    if (column.showImg) {
+      console.log(value)
+      if (value) {
+        return (
+          <div style={{ width: '120px' }}>
+            <Image
+              className="rounded-lg"
+              src={`${url}${value ? value : '/'}`}
+              alt={`Image for ${column.data}`}
+              width={120}
+              height={80}
+            />
+          </div>
+        )
+      } else {
+        return (
+          <div style={{ width: '120px' }}>
+            <ImageIcon></ImageIcon>
+          </div>
+        )
+      }
+
+    }
+
     if (column.isBadge) {
-      const color = column.color?.find((c: { key: string }) => c.key === String(value))?.value || 'gray'
-      return <Badge variant={color as any}>{String(value)}</Badge>
+      return (
+        <Badge className="capitalize" variant="default">
+          {value ? value.split('_').join(' ') : ''}
+        </Badge>
+      )
     }
-    return String(value)
+
+    return value || ''
   }
 
   if (isLoading) {
@@ -237,6 +413,7 @@ export default function DataTable({
   }
 
   return (
+ 
     <div className="space-y-4">
       <div className="flex space-x-2">
         {search_queries.map((query, index) => (
@@ -247,50 +424,77 @@ export default function DataTable({
             onChange={(e) => setSearchQuery({ ...searchQuery, [query]: e.target.value })}
           />
         ))}
+
         <Button onClick={handleSearch}>Search</Button>
         {showNew && <Button onClick={
           handleNew
-        }>New</Button>}
+        }><PlusIcon className="mr-2 h-4 w-4" />New</Button>}
       </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column, index) => (
-              <TableHead key={index}>{column.label}</TableHead>
-            ))}
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item, itemIndex) => (
-            <TableRow key={itemIndex}>
-              {columns.map((column, columnIndex) => (
-                <TableCell key={columnIndex}>
-                  {renderCell(item, column)}
-                </TableCell>
+      <div className=" rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column, index) => (
+                <TableHead key={index}>{column.label}</TableHead>
               ))}
-              <TableCell>
-                <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
-                {buttons.map((button, buttonIndex) => (
-                  (!button.showCondition || button.showCondition(item)) && (
-                    <Button
-                      key={buttonIndex}
-                      variant="ghost"
-                      onClick={() => button.onclickFn(item, () => fetchData(currentPage), confirmModalFn)}
-                    >
-                      {button.name}
-                    </Button>
-                  )
-                ))}
-                {canDelete && (
-                  <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
-                )}
-              </TableCell>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {items.map((item, itemIndex) => (
+              <TableRow key={itemIndex}>
+                {columns.map((column, columnIndex) => (
+                  <TableCell key={columnIndex}>
+                    {renderCell(item, column)}
+                  </TableCell>
+                ))}
+                <TableCell>
+                  <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                  {buttons.map((button, buttonIndex) => {
+                    if (button.showCondition && !button.showCondition(item)) {
+                      return null;
+                    }
+
+                    const buttonProps = {
+                      key: buttonIndex,
+                      variant: "ghost" as const,
+                      onClick: button.onclickFn
+                        ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                        : undefined
+                    };
+
+                    const buttonContent = <span>{button.name}</span>;
+
+                    if (button.href) {
+                      const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                      return (
+                        <Button asChild {...buttonProps}>
+                          <Link href={href}>
+                            {buttonContent}
+                          </Link>
+                        </Button>
+                      );
+                    }
+
+                    return (
+                      <Button {...buttonProps}>
+                        {buttonContent}
+                      </Button>
+                    );
+                  })}
+
+
+
+
+                  {canDelete && (
+                    <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <div className="flex justify-center space-x-2">
         <Button
@@ -314,7 +518,8 @@ export default function DataTable({
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
           <DynamicForm data={selectedItem} inputs={colInputs} customCols={customCols} module={model} postFn={function (): void {
-            throw new Error('Function not implemented.')
+            setIsModalOpen(false)
+            fetchData(currentPage);
           }}
 
           />
@@ -335,5 +540,6 @@ export default function DataTable({
         </DialogContent>
       </Dialog>
     </div>
+    
   )
 }

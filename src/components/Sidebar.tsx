@@ -1,65 +1,186 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { HomeIcon, BoxIcon, UsersIcon, BarChartIcon, SettingsIcon, MenuIcon, LogInIcon, ShoppingBagIcon } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+import {
+  HomeIcon,
+  ShoppingBagIcon,
+  PackageIcon,
+  CreditCardIcon,
+  UsersIcon,
+  BoxIcon,
+  TagIcon,
+  ScaleIcon,
+  DollarSignIcon,
+  MapPinIcon,
+  MegaphoneIcon,
+  SettingsIcon,
+  LogOutIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  MenuIcon,
+  ExpandIcon,
+  ListCollapseIcon
+} from 'lucide-react'
+
+interface NavItem {
+  name: string
+  href: string
+  icon: React.ElementType
+  count?: number
+}
+
+interface NavGroup {
+  name: string
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    name: "Dashboard",
+    items: [
+      { name: "Overview", href: "/dashboard", icon: HomeIcon, count: 5 },
+    ]
+  },
+  {
+    name: "Sellers",
+    items: [
+      { name: "Sellers", href: "/sellers", icon: UsersIcon, count: 50 },
+      { name: "Membership Packages", href: "/membership_packages", icon: PackageIcon, count: 3 },
+      { name: "Payments", href: "/payments", icon: CreditCardIcon, count: 10 },
+      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBagIcon, count: 25 },
+    ]
+  },
+  {
+    name: "Products",
+    items: [
+      { name: "Products", href: "/products", icon: BoxIcon, count: 100 },
+      { name: "Variants", href: "/variants", icon: TagIcon, count: 250 },
+      { name: "Unit of Measurement", href: "/unit_measurements", icon: ScaleIcon, count: 15 },
+      { name: "Price Groups", href: "/price_groups", icon: DollarSignIcon, count: 8 },
+    ]
+  },
+  {
+    name: "Operations",
+    items: [
+      { name: "Locations", href: "/locations", icon: MapPinIcon, count: 12 },
+      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: MegaphoneIcon, count: 5 },
+      { name: "Marketing Banners", href: "/marketing_banners", icon: MegaphoneIcon, count: 5 },
+      { name: "Participating Products", href: "/marketing_banner_products", icon: MegaphoneIcon, count: 5 },
+   
+
+    ]
+  },
+  {
+    name: "System",
+    items: [
+      { name: "Settings", href: "/settings", icon: SettingsIcon },
+      { name: "Logout", href: "/login", icon: LogOutIcon },
+    ]
+  }
+]
 
 export default function Sidebar() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
+  const pathname = usePathname()
+
+  const toggleGroup = (groupName: string) => {
+    setCollapsedGroups(prev => 
+      prev.includes(groupName) 
+        ? prev.filter(name => name !== groupName)
+        : [...prev, groupName]
+    )
+  }
+
+  const isGroupCollapsed = (groupName: string) => collapsedGroups.includes(groupName)
+
+  const toggleAllGroups = () => {
+    if (collapsedGroups.length === navGroups.length) {
+      setCollapsedGroups([])
+    } else {
+      setCollapsedGroups(navGroups.map(group => group.name))
+    }
+  }
+
+  useEffect(() => {
+    // Reset collapsed groups when sidebar is collapsed
+    if (isSidebarCollapsed) {
+      setCollapsedGroups([])
+    }
+  }, [isSidebarCollapsed])
 
   return (
-    <nav className={`bg-white shadow-md transition-all duration-300 ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}>
+    <nav className={cn(
+      "bg-white shadow-md transition-all duration-300 flex flex-col",
+      isSidebarCollapsed ? "w-16" : "w-64"
+    )}>
       <div className="p-4 flex justify-between items-center">
-        {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">Seller Portal</h1>}
-        <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
-          <MenuIcon className="h-6 w-6" />
-        </Button>
+        {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">Jimat v4 Admin</h1>}
+        <div className="flex space-x-2">
+          {!isSidebarCollapsed && (
+            <Button variant="ghost" size="icon" onClick={toggleAllGroups}>
+              {collapsedGroups.length === navGroups.length ? <ExpandIcon className="h-4 w-4" /> : <ListCollapseIcon className="h-4 w-4" />}
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+            <MenuIcon className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
-      <ul className="space-y-2 py-4">
-        <li>
-          <Link href="/dashboard" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <HomeIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Dashboard</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="/sellers" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <ShoppingBagIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Sellers</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="#" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <BoxIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Inventory</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="#" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <UsersIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Customers</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="#" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <BarChartIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Analytics</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="#" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <SettingsIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Settings</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href="/login" className={`flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <LogInIcon className="h-5 w-5" />
-            {!isSidebarCollapsed && <span>Login</span>}
-          </Link>
-        </li>
-      </ul>
+      <ScrollArea className="flex-grow">
+        <div className="space-y-4 p-4">
+          {navGroups.map((group, groupIndex) => (
+            <div key={group.name}>
+              {groupIndex > 0 && <Separator className="my-2" />}
+              {!isSidebarCollapsed && (
+                <button
+                  onClick={() => toggleGroup(group.name)}
+                  className="w-full px-4 py-2 flex items-center justify-between text-sm font-semibold text-gray-500 hover:bg-gray-100"
+                >
+                  {group.name}
+                  {isGroupCollapsed(group.name) ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                </button>
+              )}
+              <ul className={cn(
+                "space-y-1 py-2",
+                isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
+              )}>
+                {group.items.map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                        pathname === item.href
+                          ? "bg-gray-200 text-gray-900"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                        isSidebarCollapsed ? "justify-center" : "justify-between"
+                      )}
+                    >
+                      <div className="flex items-center">
+                        <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                        {!isSidebarCollapsed && <span>{item.name}</span>}
+                      </div>
+                      {!isSidebarCollapsed && item.count !== undefined && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {item.count}
+                        </Badge>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
     </nav>
   )
 }

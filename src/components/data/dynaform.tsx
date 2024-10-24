@@ -18,13 +18,20 @@ import {
 import { GridIcon } from "lucide-react"
 import dynamic from 'next/dynamic'
 import { useAuth } from '@/lib/auth'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 
+} from '@/components/ui/dropdown-menu';
+import DynamicDropdown from './dynadropdown'
+import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 // Dynamically import TinyMCE to avoid SSR issues
 // const TinyMCEditor = dynamic(() => import('@tinymce/tinymce-react').then(mod => mod.Editor), { ssr: false })
 
 // Assuming these are defined in your environment variables
-const PHX_HTTP_PROTOCOL = process.env.NEXT_PUBLIC_PHX_HTTP_PROTOCOL || 'http://'
-const PHX_ENDPOINT = process.env.NEXT_PUBLIC_PHX_ENDPOINT || 'localhost:4000'
+
 
 interface DynamicInputProps {
   input: any
@@ -35,6 +42,7 @@ interface DynamicInputProps {
 }
 
 const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, data, onChange }) => {
+  console.log(data)
   const key = typeof keyName === 'string' ? { label: keyName } : keyName
   const inputKey = input?.key || (typeof keyName === 'string' ? keyName : keyName.label)
   const value = data[inputKey]
@@ -46,9 +54,16 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
     onChange(inputKey, newValue)
   }, [inputKey, onChange])
 
+  function handleFileChange(e: any) {
+    console.log(e); 
+  }
+
   if (key.hidden) {
     return <Input type="hidden" name={inputName(inputKey)} value={key.value} />
   }
+  // if (key.label == 'id') {
+  //   return <Input type="hidden" name={inputName(inputKey)} value={key.value} />
+  // }
 
   if (key.expose) {
     return (
@@ -132,6 +147,67 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
     )
   }
 
+
+  if (key.upload) {
+    return (
+      <div className="w-full mx-4 my-2">
+        <Label className="space-y-4 " >
+          <span className="capitalize">{altName}</span>
+        </Label>
+        <div className='h-2'></div>
+        <Input type="file" id={inputKey} name={inputName(inputKey)} onChange={handleFileChange} />
+        {value && value instanceof File && (
+          <div className="mt-2 text-sm text-gray-600">Selected File: {value.name}</div>
+        )}
+      </div>
+    );
+  }
+
+  if (key.selection) {
+
+    return (
+      <div className="w-full mx-4 my-2">
+        <Label className="space-y-4 " >
+          <span className="capitalize">{altName}</span>
+        </Label>
+        <div className='h-2'></div>
+      <DynamicDropdown
+        data={data}
+        input={input}
+        newData={key.newData}
+        name={inputName(inputKey)}
+        module={key.selection}
+        parent={module}
+        search_queries={key.search_queries}
+        title_key={key.title_key}
+        selection={key.selection}
+      />
+      </div>
+    )
+  }
+
+  // if (key.multiSelection) {
+  //   return (
+  //     <div className="w-full mx-4 my-2">
+  //       <Label className="space-y-2 mb-3">
+  //         <span className="capitalize">{altName}</span>
+  //       </Label>
+  //       {/* Assume MultiSelection is already defined */}
+  //       <MultiSelection
+  //         data={data}
+  //         input={input}
+  //         dataList={key.dataList}
+  //         parent_id={key.parentId}
+  //         module={key.module}
+  //         selection={key.selection}
+  //         name={inputName(inputKey)}
+  //         onChange={handleChange}
+  //       />
+  //     </div>
+  //   );
+  // }
+
+
   // Default to text input for any other type
   return (
     <div className="w-full sm:w-1/3 mx-4 my-2">
@@ -179,7 +255,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const formData = new FormData(form)
-    alert("!")
+  
     try {
       const response = await fetch(`${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${module}`, {
         method: 'POST',

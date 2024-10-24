@@ -12,13 +12,13 @@ export default function SellersPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Sellers</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Price Groups</h2>
         
       </div>
 
-      <DataTable canDelete={true}
+      <DataTable 
         showNew={true}
-        model={'Seller'}
+        model={'PriceGroup'}
         search_queries={['a.name']}
         customCols={
           [
@@ -27,20 +27,14 @@ export default function SellersPage() {
               list: [
                 'id',
                 'name',
-                'username',
-                'email',
-                'phone',
+              
 
               ]
             },
             {
               title: 'Detail',
               list: [
-                'jenis_lesen',
-                'lesen_no',
-                'bank_account_no',
-                'bank_name',
-                'bank_account_holder'
+            
               ]
             },
           ]
@@ -48,9 +42,7 @@ export default function SellersPage() {
         columns={[
 
           { label: 'Name', data: 'name' },
-          { label: 'Username', data: 'username' },
-          { label: 'Email', data: 'email' },
-          { label: 'Phone', data: 'phone' }
+      
 
         ]}
 

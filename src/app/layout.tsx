@@ -6,8 +6,8 @@ import { AuthProvider } from '@/lib/auth'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Seller Portal',
-  description: 'Buy supplies from supplier',
+  title: 'Admin Portal',
+  description: 'Jimat v4 Admin',
 }
 
 export default function RootLayout({
@@ -19,6 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
+          
           {children}
         </AuthProvider>
       </body>
