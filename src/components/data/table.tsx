@@ -36,10 +36,11 @@ interface CustomCol {
   title: string;
 
   list: (string | {
+    alt_class?: string 
     label: string
     hidden?: boolean
     value?: any
-    selection?: string
+    selection?: string | string[]
     customCols?: any
     search_queries?: string[]
     newData?: string
@@ -53,6 +54,7 @@ interface CustomCol {
 }
 interface CustomSubCol {
   label: string;
+  alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string;
   search_queries: string[];
@@ -78,7 +80,7 @@ interface DataTableProps {
   columns: {
     label: string
     data: string
-    subtitle?: Record<any, any>
+    subtitle?: {label: string, data: string }
     formatDateTime?: boolean
     offset?: number
     isBadge?: boolean
@@ -191,9 +193,11 @@ export default function DataTable({
 
     console.log('already set isLoading to TRUE');
     setError(null);
-
+   
+    let finalSearchQuery ;
+    finalSearchQuery = Object.keys(searchQuery).length == 0 ? '' : searchQuery
     const apiData = {
-      search: { regex: 'false', value: searchQuery == {} ? '' : searchQuery },
+      search: { regex: 'false', value: finalSearchQuery},
       additional_join_statements: JSON.stringify(join_statements),
       additional_search_queries: buildSearchString(searchQuery),
       draw: '1',
@@ -331,7 +335,7 @@ export default function DataTable({
 
   interface Column {
     data: string
-    subtitle?: { data: string }
+    subtitle?: {label: string, data: string }
     showPreview?: boolean
     formatDate?: boolean
     formatDateTime?: boolean
@@ -339,7 +343,6 @@ export default function DataTable({
     color?: { key: string | boolean; value: string }[]
     showImg?: boolean
     showJson?: boolean
-
     isBadge?: boolean
     offset?: number
   }

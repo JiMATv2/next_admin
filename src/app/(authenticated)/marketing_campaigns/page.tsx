@@ -36,13 +36,13 @@ export default function MarketingCampaignPage() {
                             list: [
                                 'id',
                                 'name',
-                             
-                                {label: 'short_desc', alt_class: 'w-2/3  mx-4 my-2 ' },
-                                {label: 'long_desc', editor2: true},
+
+                                { label: 'short_desc', alt_class: 'w-2/3  mx-4 my-2 ' },
+                                { label: 'long_desc', editor2: true },
                                 'price',
-                               {label:  'img_url', upload: true}, 
-                               {label:  'date_start', date: true}, 
-                               {label:  'date_end', date: true}, 
+                                { label: 'img_url', upload: true },
+                                { label: 'date_start', date: true },
+                                { label: 'date_end', date: true },
                             ]
                         },
                         {
@@ -58,7 +58,7 @@ export default function MarketingCampaignPage() {
                     { label: 'Cover', data: 'img_url', showImg: true },
                     { label: '', data: 'img_url', showPreview: true },
                     { label: 'Name', data: 'name' },
-                    { label: 'Date', data: 'date_start', subtitle: {label: '', data: 'date_end'} },
+                    { label: 'Date', data: 'date_start', subtitle: { label: '', data: 'date_end' } },
                     { label: 'Price (MYR)', data: 'price' },
 
                 ]}
