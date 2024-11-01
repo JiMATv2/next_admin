@@ -472,7 +472,7 @@ export default function DataTable({
       console.log(column)
       console.log(value)
 
-      var showVal = value
+      let showVal = value
 
 
       if ([true, false].includes(value)) {
@@ -486,7 +486,7 @@ export default function DataTable({
     }
     if (column.showJson) {
 
-      var theme = {
+      let theme = {
         scheme: 'bright',
         author: 'chris kempson (http://chriskempson.com)',
         base00: '#000000',
