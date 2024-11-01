@@ -5,15 +5,21 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/lib/auth"
 import { PlusIcon } from 'lucide-react'
+import ModelProvider, { useModel } from '@/lib/provider';
+import { useEffect, useState } from "react";
 
-export default function MarketingBannerPage() {
-
+export default function PaymentsPage({ params }: { params: { marketing_banner_id: string } }) {
+    const [data, setData] = useState<any[]>([]);
+    console.log(data)
+    const marketing_banner_id = params.marketing_banner_id
+    // Load data from localStorage when the component mounts
+    useEffect(() => {
+        const storedData = localStorage.getItem('modelData');  // Replace 'modelData' with your key
+        if (storedData) {
+            setData(JSON.parse(storedData));  // Parse and set the data in state
+        }
+    }, []);
     // This is a placeholder for future implementation
-
-    function hrefFn(data: any) {
-        console.log(data)
-        return '/marketing_banners/' + data.id + '/marketing_banner_products';
-    }
 
     function approveFn(data: any) {
         console.log(data)
@@ -24,45 +30,43 @@ export default function MarketingBannerPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">Marketing Banner</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Submitted Products</h2>
 
             </div>
 
+
             <DataTable canDelete={true}
                 showNew={true}
-                model={'MarketingBanner'}
-                preloads={['marketing_campaign', 'seller', 'payment']}
-                search_queries={['a.name']}
-                buttons={[{ name: 'Participating Products', onclickFn: approveFn, href: hrefFn }]}
-               
+                appendQueries={{ marketing_banner_id: marketing_banner_id }}
+                model={'MarketingBannerProduct'}
+                preloads={['product', 'price', 'seller', 'price_group']}
+                search_queries={['b.name']}
+                // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
                         {
                             title: 'General',
                             list: [
                                 'id',
-                                'name',
+                                'marketing_banner_id',
+                             {label: 'img_url', upload: true},
                                 {
-                                    label: 'marketing_campaign_id',
+                                    label: 'product_id',
                                     customCols: null,
-                                    selection: 'MarketingCampaign',
+                                    selection: 'Product',
                                     search_queries: ['a.name'],
                                     newData: 'name',
                                     title_key: 'name'
                                 },
-                                'payment_id',
+
                                 {
-                                    label: 'seller_id',
+                                    label: 'price_id',
                                     customCols: null,
-                                    selection: 'Seller',
-                                    search_queries: ['a.name'],
+                                    selection: 'Price',
+                                    // search_queries: ['b.seller'],
                                     newData: 'name',
                                     title_key: 'name'
-                                },
-                                { label: 'is_approved', boolean: true },
-                                { label: 'img_url', upload: true }
-
-
+                                }
 
                             ]
                         },
@@ -75,30 +79,12 @@ export default function MarketingBannerPage() {
                     ]
                 }
                 columns={[
-                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
                     { label: 'Cover', data: 'img_url', showImg: true },
                     { label: '', data: 'img_url', showPreview: true },
+                    { label: 'Product', data: 'name', through: ['product'] },
+                    { label: 'Amount (MYR)', data: 'amount', through: ['price'] },
+                    { label: 'Price Group', data: 'name', through: ['price_group'] },
                     { label: 'Seller', data: 'name', through: ['seller'] },
-
-
-                    {
-                        label: 'Approved?', data: 'is_approved', color: [
-                            {
-                                key: false,
-                                value: 'destructive'
-                            },
-
-                            {
-                                key: true,
-                                value: 'default'
-                            }
-                        ]
-                    },
-                    { label: 'Payment', data: 'payment', showJson: true },
-
-
-
-
 
                 ]}
 

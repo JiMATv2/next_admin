@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 import DataTable from "@/components/data/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,9 @@ export default function PaymentsPage() {
             <DataTable canDelete={true}
                 showNew={true}
                 model={'Payment'}
-                search_queries={['a.channel_ref']}
+                preloads={['seller']}
+                join_statements={[{seller: 'seller'}]}
+                search_queries={['a.channel_ref|b.name']}
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
@@ -35,8 +37,28 @@ export default function PaymentsPage() {
                             title: 'General',
                             list: [
                                 'id',
+
+                                {
+                                    label: 'status',
+                               
+                                    selection: ['pending_payment', 'paid'],
+                                 
+                                },
+
+                                'amount',
+                                'desc',
                        
-                       
+                                'channel',
+                                'channel_ref',
+                                {
+                                    label: 'seller_id',
+                                    customCols: null,
+                                    selection: 'Seller',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                }
+
 
                             ]
                         },
@@ -50,10 +72,29 @@ export default function PaymentsPage() {
                 }
                 columns={[
 
-       
-                    { label: 'Timestamp', data: 'inserted_at' ,  formatDateTime: true , offset: 8},
-                 
-               
+
+                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+            
+
+                    {
+                        label: 'Status', data: 'status', color: [
+                            {
+                                key: 'pending_payment',
+                                value: 'destructive'
+                            },
+
+                            {
+                                key: 'paid',
+                                value: 'default'
+                            }
+                        ]
+                    },
+                    { label: 'Paid (MYR)', data: 'amount' },
+                    { label: 'Seller', data: 'name', through: ['seller'] },
+                    { label: 'Description', data: 'desc', },
+                    { label: 'Ref', data: 'ref_no', },
+                    { label: 'Channel', data: 'channel', },
+                    { label: 'Ch. Ref', data: 'channel_ref', },
 
                 ]}
 

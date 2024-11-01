@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Check, Search } from "lucide-react"
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
+import { postData } from '@/lib/svt_utils'
 
 
 interface DynamicDropdownProps {
@@ -50,20 +51,17 @@ export default function DynamicDropdown({
   const tryPost = async () => {
     const newFormData = { [newData]: query }
     const map = { [module]: { ...newFormData, id: '0' } }
-    
+    var url = `${cac_url}/svt_api/${module}`
     try {
-      const response = await fetch(`${cac_url}/svt_api/${module}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(map),
-      })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      // Handle successful post
-      fetchData()
+
+
+     await postData({
+        endpoint: url,
+        data: map, successCallback: fetchData
+      },)
+
+
+
     } catch (error) {
       console.error('Error posting data:', error)
     }
@@ -100,7 +98,7 @@ export default function DynamicDropdown({
     }
 
     const queryString = buildQueryString({ ...apiData }, null);
-   
+
     try {
       const response = await fetch(`${cac_url}/svt_api/${module}?${queryString}`, {
         headers: {
@@ -156,10 +154,10 @@ export default function DynamicDropdown({
 
   return (
     <div>
-      <Input 
-        type="hidden" 
-        name={inputName(input.key)} 
-        value={data[input.key]} 
+      <Input
+        type="hidden"
+        name={inputName(input.key)}
+        value={data[input.key]}
         onChange={(e) => data[input.key] = e.target.value}
       />
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -186,8 +184,8 @@ export default function DynamicDropdown({
           </div>
           <div className="max-h-[300px] overflow-y-auto">
             {items.map((item) => (
-              <DropdownMenuItem 
-                key={item.id} 
+              <DropdownMenuItem
+                key={item.id}
                 onSelect={() => updateData(item.id, item[title_key])}
               >
                 {item[title_key]}
@@ -196,9 +194,9 @@ export default function DynamicDropdown({
           </div>
           {typeof selection === 'string' && (
             <div className="p-2">
-              <Button 
-                size="sm" 
-                className="w-full" 
+              <Button
+                size="sm"
+                className="w-full"
                 onClick={tryPost}
               >
                 <Check className="w-4 h-4 mr-2" />

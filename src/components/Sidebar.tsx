@@ -26,14 +26,17 @@ import {
   ChevronRightIcon,
   MenuIcon,
   ExpandIcon,
-  ListCollapseIcon
+  ListCollapseIcon,
+  WifiIcon,
+  WifiOffIcon
 } from 'lucide-react'
+import { usePhoenixChannel } from '@/lib/usePhoenixChannel'
 
 interface NavItem {
   name: string
   href: string
   icon: React.ElementType
-  count?: number
+  countKey?: string
 }
 
 interface NavGroup {
@@ -45,35 +48,35 @@ const navGroups: NavGroup[] = [
   {
     name: "Dashboard",
     items: [
-      { name: "Overview", href: "/dashboard", icon: HomeIcon, count: 5 },
+      { name: "Overview", href: "/dashboard", icon: HomeIcon },
     ]
   },
   {
     name: "Sellers",
     items: [
-      { name: "Sellers", href: "/sellers", icon: UsersIcon, count: 50 },
-      { name: "Membership Packages", href: "/membership_packages", icon: PackageIcon, count: 3 },
-      { name: "Payments", href: "/payments", icon: CreditCardIcon, count: 10 },
-      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBagIcon, count: 25 },
+      { name: "Sellers", href: "/sellers", icon: UsersIcon, countKey: "total_sellers" },
+      { name: "Membership Packages", href: "/membership_packages", icon: PackageIcon },
+      { name: "Payments", href: "/payments", icon: CreditCardIcon },
+      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBagIcon },
     ]
   },
   {
     name: "Products",
     items: [
-      { name: "Products", href: "/products", icon: BoxIcon, count: 100 },
-      { name: "Variants", href: "/variants", icon: TagIcon, count: 250 },
-      { name: "Unit of Measurement", href: "/unit_measurements", icon: ScaleIcon, count: 15 },
-      { name: "Price Groups", href: "/price_groups", icon: DollarSignIcon, count: 8 },
+      { name: "Products", href: "/products", icon: BoxIcon },
+      { name: "Variants", href: "/variants", icon: TagIcon },
+      { name: "Unit of Measurement", href: "/unit_measurements", icon: ScaleIcon },
+      { name: "Price Groups", href: "/price_groups", icon: DollarSignIcon },
     ]
   },
   {
     name: "Operations",
     items: [
-      { name: "Locations", href: "/locations", icon: MapPinIcon, count: 12 },
-      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: MegaphoneIcon, count: 5 },
-      { name: "Marketing Banners", href: "/marketing_banners", icon: MegaphoneIcon, count: 5 },
-      { name: "Participating Products", href: "/marketing_banner_products", icon: MegaphoneIcon, count: 5 },
-   
+      { name: "Locations", href: "/locations", icon: MapPinIcon, },
+      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: MegaphoneIcon, },
+      { name: "Marketing Banners", href: "/marketing_banners", icon: MegaphoneIcon, },
+      { name: "Participating Products", href: "/marketing_banner_products", icon: MegaphoneIcon, },
+
 
     ]
   },
@@ -90,10 +93,10 @@ export default function Sidebar() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const pathname = usePathname()
-
+  const { counts, isConnected } = usePhoenixChannel()
   const toggleGroup = (groupName: string) => {
-    setCollapsedGroups(prev => 
-      prev.includes(groupName) 
+    setCollapsedGroups(prev =>
+      prev.includes(groupName)
         ? prev.filter(name => name !== groupName)
         : [...prev, groupName]
     )
@@ -123,11 +126,19 @@ export default function Sidebar() {
     )}>
       <div className="p-4 flex justify-between items-center">
         {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">Jimat v4 Admin</h1>}
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
           {!isSidebarCollapsed && (
-            <Button variant="ghost" size="icon" onClick={toggleAllGroups}>
-              {collapsedGroups.length === navGroups.length ? <ExpandIcon className="h-4 w-4" /> : <ListCollapseIcon className="h-4 w-4" />}
-            </Button>
+            <>
+              
+              {isConnected ? (
+                <WifiIcon className="h-4 w-4 text-green-500" />
+              ) : (
+                <WifiOffIcon className="h-4 w-4 text-red-500" />
+              )}
+              <Button variant="ghost" size="icon" onClick={toggleAllGroups}>
+                {collapsedGroups.length === navGroups.length ? <ExpandIcon className="h-4 w-4" /> : <ListCollapseIcon className="h-4 w-4" />}
+              </Button>
+            </>
           )}
           <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
             <MenuIcon className="h-6 w-6" />
@@ -168,9 +179,9 @@ export default function Sidebar() {
                         <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
                         {!isSidebarCollapsed && <span>{item.name}</span>}
                       </div>
-                      {!isSidebarCollapsed && item.count !== undefined && (
+                      {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
                         <Badge variant="secondary" className="ml-auto">
-                          {item.count}
+                          {counts[item.countKey]}
                         </Badge>
                       )}
                     </Link>

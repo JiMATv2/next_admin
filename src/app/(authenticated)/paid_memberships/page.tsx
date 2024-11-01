@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 import DataTable from "@/components/data/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { PlusIcon } from 'lucide-react'
 export default function PaymentsPage() {
 
     // This is a placeholder for future implementation
-
+// todo: show the total paid amount
 
     function approveFn(data: any) {
         console.log(data)
@@ -27,7 +27,9 @@ export default function PaymentsPage() {
             <DataTable canDelete={true}
                 showNew={true}
                 model={'PaidMembership'}
-                // search_queries={['a.start_date']}
+                preloads={['membership_package', 'seller', 'payment']}
+                // join_statements={[{}]}
+                search_queries={['b.name']} 
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
@@ -35,8 +37,27 @@ export default function PaymentsPage() {
                             title: 'General',
                             list: [
                                 'id',
-                       
-                       
+                                {
+                                    label: 'seller_id',
+                                    customCols: null,
+                                    selection: 'Seller',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                },
+
+                                'start_date',
+                                'end_date',
+                                'payment_id',
+                                {
+                                    label: 'membership_package_id',
+                                    customCols: null,
+                                    selection: 'MembershipPackage',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                }
+
 
                             ]
                         },
@@ -50,11 +71,15 @@ export default function PaymentsPage() {
                 }
                 columns={[
 
-       
-                    { label: 'Timestamp', data: 'inserted_at' ,  formatDateTime: true , offset: 8},
-                 
-               
 
+                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+
+                    { label: 'Package', data: 'name', through: ['membership_package'] },
+                    { label: 'Paid (MYR)', data: 'price', through: ['membership_package'] },
+                    { label: 'Seller', data: 'name', through: ['seller'] },
+                    { label: 'Start', data: 'start_date', },
+                    { label: 'End', data: 'end_date', },
+                    { label: 'Payment', data: 'payment', showJson: true },
                 ]}
 
 

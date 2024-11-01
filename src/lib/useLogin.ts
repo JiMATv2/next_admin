@@ -36,6 +36,7 @@ export function useLogin() {
         login({
           username,
           token: res.res,
+          userStruct: res.userStruct,
           role_app_routes: res.role_app_routes,
           id: res.user_id
         })

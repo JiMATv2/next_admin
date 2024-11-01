@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import DynamicDropdown from './dynadropdown'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
+import { useToast } from '@/hooks/use-toast'
 // Dynamically import TinyMCE to avoid SSR issues
 // const TinyMCEditor = dynamic(() => import('@tinymce/tinymce-react').then(mod => mod.Editor), { ssr: false })
 
@@ -35,27 +36,53 @@ import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 
 interface DynamicInputProps {
   input: any
-  keyName: string | { label: string; [key: string]: any }
+  keyName: string | { label: string;[key: string]: any }
   module: string
   data: any
   onChange: (key: string, value: any) => void
 }
 
 const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, data, onChange }) => {
-  console.log(data)
+
   const key = typeof keyName === 'string' ? { label: keyName } : keyName
   const inputKey = input?.key || (typeof keyName === 'string' ? keyName : keyName.label)
-  const value = data[inputKey]
+  let value = data[inputKey];
+
+  if (inputKey.includes(".")) {
+    var inputKeys = inputKey.split(".")
+    try {
+      value = data[inputKeys[0]][inputKeys[1]]
+    } catch(e){
+
+    }
+
+  }
+  const altClassName = key.alt_class || 'w-full lg:w-1/3 mx-4 my-2'
   const altName = key.alt_name || inputKey.replace('_', ' ')
 
-  const inputName = useCallback((key: string) => `${module}[${key}]`, [module])
+  const inputName = useCallback((key: string) => {
+
+    if (key.includes(".")) {
+
+      var subkeys = key.split(".")
+
+
+      return `${module}[${subkeys[0]}][${subkeys[1]}]`
+    } else {
+      return `${module}[${key}]`
+    }
+
+
+
+  }, [module])
 
   const handleChange = useCallback((newValue: any) => {
+   
     onChange(inputKey, newValue)
   }, [inputKey, onChange])
 
   function handleFileChange(e: any) {
-    console.log(e); 
+    console.log(e);
   }
 
   if (key.hidden) {
@@ -67,31 +94,46 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   if (key.expose) {
     return (
-      <div className="w-full sm:w-1/3 mx-4 my-2">
+      <div className="{altClassName}">
         <Label className="space-y-2">
           <span className="capitalize">{altName}</span>
-          <Input 
-            type="text" 
-            name={inputName(inputKey)} 
-            value={value || ''} 
-            onChange={(e) => handleChange(e.target.value)} 
+          <Input
+            type="text"
+            name={inputName(inputKey)}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
           />
         </Label>
       </div>
     )
   }
-
+  if (key.date) {
+    return (
+      <div className="w-full sm:w-1/3 mx-4 my-2">
+        <Label className="space-y-2">
+          <span className="capitalize">{altName}</span>
+          <Input
+            type="date"
+          
+            name={inputName(inputKey)}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+          />
+        </Label>
+      </div>
+    )
+  }
   if (key.numeric) {
     return (
       <div className="w-full sm:w-1/3 mx-4 my-2">
         <Label className="space-y-2">
           <span className="capitalize">{altName}</span>
-          <Input 
-            type="number" 
-            step="0.1" 
-            name={inputName(inputKey)} 
-            value={value || ''} 
-            onChange={(e) => handleChange(e.target.value)} 
+          <Input
+            type="number"
+            step="0.1"
+            name={inputName(inputKey)}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
           />
         </Label>
       </div>
@@ -171,17 +213,17 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           <span className="capitalize">{altName}</span>
         </Label>
         <div className='h-2'></div>
-      <DynamicDropdown
-        data={data}
-        input={input}
-        newData={key.newData}
-        name={inputName(inputKey)}
-        module={key.selection}
-        parent={module}
-        search_queries={key.search_queries}
-        title_key={key.title_key}
-        selection={key.selection}
-      />
+        <DynamicDropdown
+          data={data}
+          input={input}
+          newData={key.newData}
+          name={inputName(inputKey)}
+          module={key.selection}
+          parent={module}
+          search_queries={key.search_queries}
+          title_key={key.title_key}
+          selection={key.selection}
+        />
       </div>
     )
   }
@@ -210,14 +252,14 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   // Default to text input for any other type
   return (
-    <div className="w-full sm:w-1/3 mx-4 my-2">
+    <div className={altClassName}>
       <Label className="space-y-2">
         <span className="capitalize">{altName}</span>
-        <Input 
-          type="text" 
-          name={inputName(inputKey)} 
-          value={value || ''} 
-          onChange={(e) => handleChange(e.target.value)} 
+        <Input
+          type="text"
+          name={inputName(inputKey)}
+          value={value || ''}
+          onChange={(e) => handleChange(e.target.value)}
         />
       </Label>
     </div>
@@ -227,7 +269,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 interface DynamicFormProps {
   data: any
   inputs: any[]
-  customCols: { title: string; list: (string | { label: string; [key: string]: any })[] }[]
+  customCols: { title: string; list: (string | { label: string;[key: string]: any })[] }[]
   module: string
   postFn: () => void
   showNew?: boolean
@@ -236,7 +278,7 @@ interface DynamicFormProps {
 
 export default function DynamicForm({ data, inputs, customCols, module, postFn, showNew = false, style }: DynamicFormProps) {
   const { user, logout } = useAuth()
-  console.log(user)
+  let {toast}  = useToast()
   const [formData, setFormData] = useState(data)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState('')
@@ -248,31 +290,58 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
   }, [customCols])
 
   const handleInputChange = useCallback((key: string, value: any) => {
-    setFormData((prevData: any) => ({ ...prevData, [key]: value }))
-  }, [])
-
+    setFormData((prevData: any) => {
+      // Split the key by '.' to check if it refers to a nested property
+      const keys = key.split('.');
+      
+      if (keys.length === 1) {
+        // If there is no dot, it's a top-level property
+        return { ...prevData, [key]: value };
+      } else {
+        // Destructure the keys for the nested property
+        const [mainKey, subKey] = keys;
+        return {
+          ...prevData,
+          [mainKey]: {
+            ...prevData[mainKey],
+            [subKey]: value
+          }
+        };
+      }
+    });
+  }, []);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const formData = new FormData(form)
-  
+
     try {
       const response = await fetch(`${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${module}`, {
         method: 'POST',
         body: formData,
         headers: {
-          
+
           'authorization': `Basic ${user?.token}`
         }
       })
 
-      
+
 
       if (response.ok) {
         postFn()
         setIsModalOpen(false)
+
+        toast({
+          title: "Action Completed",
+          description: "Your action was successful!",
+      })
       } else {
         console.error('Form submission failed')
+        toast({
+          title: "Something went wrong!",
+          description: "Your action was unsuccessful!",
+      })
       }
     } catch (error) {
       console.error('An error occurred during form submission:', error)
@@ -281,8 +350,8 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
-      <h3 className="mb-4 text-xl font-medium text-gray-900 dark:text-white">{module} Form</h3>
-      
+      <h3 className="hidden mb-4 text-xl font-medium text-gray-900 dark:text-white">{module} Form</h3>
+
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList>
           {customCols.map((col) => (
@@ -311,7 +380,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
           </TabsContent>
         ))}
       </Tabs>
-      
+
       <Button type="submit">Submit</Button>
     </form>
   )
@@ -327,7 +396,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
             New
           </Button>
         )}
-        
+
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

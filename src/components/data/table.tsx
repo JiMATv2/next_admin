@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ModelProvider, { useModel } from '@/lib/provider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Image from "next/image"
+import { JSONTree } from 'react-json-tree';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,12 +18,15 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { genInputs } from '@/lib/svt_utils'
+import { genInputs, postData } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 import { useAuth } from '@/lib/auth'
 import { ImageIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
+import SearchInput from './searchInput';
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast';
 
 // Assuming these are defined in your environment variables
 
@@ -44,6 +48,7 @@ interface CustomCol {
     editor?: boolean
     editor2?: boolean
     upload?: boolean
+    date?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
@@ -59,6 +64,7 @@ interface DataTableProps {
   showNew?: boolean
   canDelete?: boolean
   search_queries?: string[]
+  join_statements?: Record<any, any>
   model: string
   preloads?: string[]
   buttons?: {
@@ -72,10 +78,12 @@ interface DataTableProps {
   columns: {
     label: string
     data: string
+    subtitle?: Record<any, any>
     formatDateTime?: boolean
     offset?: number
     isBadge?: boolean
     showImg?: boolean
+    showJson?: boolean
     showPreview?: boolean
     showDateTime?: boolean
     color?: { key: string | boolean, value: string }[]
@@ -84,9 +92,11 @@ interface DataTableProps {
 }
 
 export default function DataTable({
+
   appendQueries = {},
   showNew = false,
   canDelete = false,
+  join_statements = [],
   search_queries = [],
   model,
   preloads = [],
@@ -96,7 +106,7 @@ export default function DataTable({
 }: DataTableProps) {
 
 
-
+  const { toast } = useToast()
   const [items, setItems] = useState<any[]>([])
   const { data, setData } = useModel();
   const [colInputs, setColInputs] = useState<any[]>([]) // State to hold colInputs
@@ -108,22 +118,36 @@ export default function DataTable({
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [confirmModalMessage, setConfirmModalMessage] = useState('')
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+
   const [error, setError] = useState<string | null>(null)
 
   const [previewModal, setPreviewModal] = useState(false)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
-
+  const router = useRouter()
+  const searchParams = useSearchParams()
   let selectedData = {};
   const itemsPerPage = 100
+
+  let isLoading = false, isLoading2 = false;
 
   // Fetch colInputs using genInputs inside useEffect
   useEffect(() => {
     const fetchColInputs = async () => {
+      isLoading = true;
       const inputs = await genInputs(url, model);
+      isLoading = false;
       setColInputs(inputs);
     };
-    fetchColInputs();
+
+
+
+    if (!isLoading) {
+      fetchColInputs();
+    }
+
+
+
+
   }, []);
 
   const buildSearchString = useCallback((query: any) => {
@@ -152,6 +176,7 @@ export default function DataTable({
         if (data[key] != null && typeof data[key] === 'object' && !Array.isArray(data[key])) {
           return buildQueryString(data[key], nestedKey);
         } else if (data[key] == null) {
+
           return ``;
         } else {
           return `${nestedKey}=${encodeURIComponent(data[key])}`;
@@ -160,14 +185,16 @@ export default function DataTable({
       .join('&');
   }
   const fetchData = useCallback(async (pageNumber: number) => {
-    if (isLoading) return; // Avoid fetching data while it's already being fetched
+    console.log('is loading?...' + isLoading2);
+    if (isLoading2) return; // Avoid fetching data while it's already being fetched
+    isLoading2 = true;
 
-    setIsLoading(true);
+    console.log('already set isLoading to TRUE');
     setError(null);
 
     const apiData = {
-      search: { regex: 'false', value: '' },
-      additional_join_statements: null,
+      search: { regex: 'false', value: searchQuery == {} ? '' : searchQuery },
+      additional_join_statements: JSON.stringify(join_statements),
       additional_search_queries: buildSearchString(searchQuery),
       draw: '1',
       length: itemsPerPage,
@@ -180,7 +207,7 @@ export default function DataTable({
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null);
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
-    console.log(blog_url)
+    console.log(apiData)
     try {
       const response = await fetch(`${blog_url}/svt_api/${model}?${queryString}`, {
         headers: {
@@ -200,26 +227,65 @@ export default function DataTable({
       console.error('An error occurred', error);
       setError('Failed to fetch data. Please try again.');
     } finally {
-      setIsLoading(false);
+      isLoading2 = true;
+
     }
   },
     [model, searchQuery, appendQueries, preloads, buildSearchString]
   );
-
-
-
   useEffect(() => {
-    fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
+
+    if (!isLoading2) {
+      fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
+    }
   }, [currentPage, searchQuery]); // Trigger only when these states change
 
+  // Function to update URL with the current search query
+  const updateUrlWithSearch = useCallback(() => {
+    const searchParam = JSON.stringify(searchQuery)
+    const newParams = new URLSearchParams(searchParams.toString())
+    newParams.set('search', searchParam)
+    console.log(router)
+    router.replace(`${window.location.pathname}?${newParams.toString()}`, { scroll: false })
+  }, [router, searchParams, searchQuery])
 
-  const handleSearch = () => {
-    setCurrentPage(1); // Only set the current page to 1, let useEffect handle the API call
-  };
+  // Function to parse search query from URL
+  const parseSearchFromUrl = useCallback(() => {
+    const searchParam = searchParams.get('search')
+    console.log(searchParam)
+    if (searchParam) {
+      try {
+        const parsedSearch = JSON.parse(searchParam)
+        console.log(parsedSearch)
+        setSearchQuery(parsedSearch)
+      } catch (error) {
+        console.error('Error parsing search query from URL:', error)
+      }
+    }
+  }, [searchParams])
 
+  // Effect to update URL when search query changes
+  useEffect(() => {
+    if (Object.keys(searchQuery).length) {
+      updateUrlWithSearch()
+    }
+  }, [searchQuery, updateUrlWithSearch])
+
+
+
+  // Modify handleSearch to include URL update
+  const handleSearch = (newSearchQuery: any) => {
+    setSearchQuery(newSearchQuery)
+    setCurrentPage(1)
+    updateUrlWithSearch()
+  }
+  // Effect to parse search query from URL on initial load
+  useEffect(() => {
+    parseSearchFromUrl()
+  }, [parseSearchFromUrl])
 
   const handleNew = () => {
-    setSelectedItem({...{ id: "0" }, ...appendQueries})
+    setSelectedItem({ ...{ id: "0" }, ...appendQueries })
     setIsModalOpen(true)
 
   }
@@ -231,16 +297,30 @@ export default function DataTable({
   }
 
   const handleDelete = (item: any) => {
-    setSelectedItem(item)
-    setConfirmModalMessage('Are you sure you want to delete this item?')
+    setSelectedItem(item);
+    setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
-      // Implement delete API call here
-      console.log('Deleting item', item.id)
-      await fetchData(currentPage)
-      setConfirmModalOpen(false)
-    })
-    setConfirmModalOpen(true)
-  }
+      (async () => {
+        console.log("Deleting item", item.id);
+
+        await postData({
+          method: "DELETE",
+          endpoint: `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${model}/${item.id}`,
+        });
+
+        await fetchData(currentPage); // Explicitly await fetchData
+        console.log("fetch after delete?");
+        setConfirmModalOpen(false);
+
+        toast({
+          title: "Action completed!",
+          description: "Your action was successful!",
+        });
+      })();
+    });
+    setConfirmModalOpen(true);
+  };
+
 
   const confirmModalFn = (bool: boolean, message: string, fn: () => void, opts?: any) => {
     setConfirmModalOpen(bool)
@@ -258,6 +338,8 @@ export default function DataTable({
     through?: string[]
     color?: { key: string | boolean; value: string }[]
     showImg?: boolean
+    showJson?: boolean
+
     isBadge?: boolean
     offset?: number
   }
@@ -274,7 +356,34 @@ export default function DataTable({
 
     const checkAssoc = (data: any, val: string, through: string[]) => {
       try {
-        return data[through[0]] ? data[through[0]][val] : ''
+        if (data[through[0]]) {
+
+          if (column.showImg) {
+            console.log(val)
+            if (val) {
+              return (
+                <div style={{ width: '120px' }}>
+                  <Image
+                    className="rounded-lg"
+                    src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
+                    alt={`Image for ${column.data}`}
+                    width={120}
+                    height={80}
+                  />
+                </div>
+              )
+            }
+          } else {
+
+          }
+
+          return data[through[0]][val]
+        } else {
+          return ''
+        }
+
+
+
       } catch (e) {
         return ''
       }
@@ -352,7 +461,7 @@ export default function DataTable({
     }
 
     if (column.formatDateTime) {
-      return formatDateTime(value, column.offset)
+      return (<><small>{formatDateTime(value, column.offset)}</small></>)
     }
 
     if (column.through) {
@@ -362,11 +471,56 @@ export default function DataTable({
     if (column.color) {
       console.log(column)
       console.log(value)
+
+      var showVal = value
+
+
+      if ([true, false].includes(value)) {
+        showVal = value ? 'Yes' : 'No'
+      }
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {value ? 'Yes' : 'No'}
+          {showVal.replace("_", " ")}
         </Badge>
       )
+    }
+    if (column.showJson) {
+
+      var theme = {
+        scheme: 'bright',
+        author: 'chris kempson (http://chriskempson.com)',
+        base00: '#000000',
+        base01: '#303030',
+        base02: '#505050',
+        base03: '#b0b0b0',
+        base04: '#d0d0d0',
+        base05: '#e0e0e0',
+        base06: '#f5f5f5',
+        base07: '#ffffff',
+        base08: '#fb0120',
+        base09: '#fc6d24',
+        base0A: '#fda331',
+        base0B: '#a1c659',
+        base0C: '#76c7b7',
+        base0D: '#6fb3d2',
+        base0E: '#d381c3',
+        base0F: '#be643c'
+      };
+      return (
+        <div className="hasJson">
+          <JSONTree data={value}
+         shouldExpandNodeInitially={(k, d, l) => {
+
+          return false; 
+         }}
+    
+
+
+          />
+        </div>
+
+      )
+
     }
 
     if (column.showImg) {
@@ -413,19 +567,14 @@ export default function DataTable({
   }
 
   return (
- 
+
     <div className="space-y-4">
       <div className="flex space-x-2">
-        {search_queries.map((query, index) => (
-          <Input
-            key={index}
-            placeholder={query.split('.')[1]}
-            value={searchQuery[query] || ''}
-            onChange={(e) => setSearchQuery({ ...searchQuery, [query]: e.target.value })}
-          />
-        ))}
+        <SearchInput
+          oriSearchQuery={searchQuery}
+          searchQueries={search_queries} onSearch={handleSearch} />
 
-        <Button onClick={handleSearch}>Search</Button>
+
         {showNew && <Button onClick={
           handleNew
         }><PlusIcon className="mr-2 h-4 w-4" />New</Button>}
@@ -540,6 +689,6 @@ export default function DataTable({
         </DialogContent>
       </Dialog>
     </div>
-    
+
   )
 }

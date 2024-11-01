@@ -1,6 +1,6 @@
 // API and Endpoint Configuration
-export const PHX_HTTP_PROTOCOL = process.env.PHX_HTTP_PROTOCOL || 'https://';  // Default to 'http' if not set
-export const PHX_ENDPOINT = process.env.PHX_ENDPOINT || 'v4.jimatlabs.com';  // Default to localhost if not set
+export const PHX_HTTP_PROTOCOL = process.env.PHX_HTTP_PROTOCOL || 'http://';  // Default to 'http' if not set
+export const PHX_ENDPOINT = process.env.PHX_ENDPOINT || 'localhost:4000';  // Default to localhost if not set
 
 // Cookie Names
 export const PHX_COOKIE = 'phx_cookie';  // Could make this environment-dependent if necessary

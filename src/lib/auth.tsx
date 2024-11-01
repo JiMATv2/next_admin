@@ -7,6 +7,7 @@ import { PHX_COOKIE, PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from './constants'
 
 interface User {
   username: string
+  userStruct?: Record<any, any>
   token: string
   role_app_routes: string[]
   id: number
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser({
               token: storedUser.cookie,
               username: storedUser.user.username ?? '',
+              userStruct: storedUser.user, 
               role_app_routes: storedUser.user.role.role_app_routes ?? [],
               id: storedUser.user.id ?? 0,
             });
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const login = (userData: User) => {
+    console.log(userData)
     setUser(userData)
     setIsLoading(false)
   }

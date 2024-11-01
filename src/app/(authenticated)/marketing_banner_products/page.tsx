@@ -27,8 +27,8 @@ export default function MarketingBannerProductPage() {
             <DataTable canDelete={true}
                 showNew={true}
                 model={'MarketingBannerProduct'}
-                search_queries={['a.name']}
-                // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
+                // search_queries={['a.name']}
+                preloads={['product', 'price', 'seller', 'price_group']}
                 customCols={
                     [
                         {
@@ -51,15 +51,15 @@ export default function MarketingBannerProductPage() {
                     ]
                 }
                 columns={[
-
-                    { label: 'Name', data: 'name' },
-                   
-                    { label: 'Timestamp', data: 'inserted_at',  formatDateTime: true , offset: 8 },
-
-
+                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+                    { label: 'Cover', data: 'img_url', showImg: true },
+                    { label: '', data: 'img_url', showPreview: true },
+                    { label: 'Product', data: 'name', through: ['product'] },
+                    { label: 'Amount (MYR)', data: 'amount', through: ['price'] },
+                    { label: 'Price Group', data: 'name', through: ['price_group'] },
+                    { label: 'Seller', data: 'name', through: ['seller'] },
 
                 ]}
-
 
             />
         </div>
