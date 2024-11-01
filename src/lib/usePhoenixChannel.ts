@@ -12,7 +12,7 @@ export function usePhoenixChannel() {
     const [isConnected, setIsConnected] = useState(false)
     const url = PHX_ENDPOINT
     useEffect(() => {
-        const socket = new Socket(`${PHX_WS_PROTOCOL}://${url}/socket`)
+        const socket = new Socket(`${PHX_WS_PROTOCOL}${url}/socket`)
         socket.connect()
 
         const channel = socket.channel('user:sidebar', {})
