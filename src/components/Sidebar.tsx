@@ -28,7 +28,19 @@ import {
   ExpandIcon,
   ListCollapseIcon,
   WifiIcon,
-  WifiOffIcon
+  WifiOffIcon,
+  Box,
+  CreditCard,
+  DollarSign,
+  LogOut,
+  MapPin,
+  Megaphone,
+  Package,
+  Scale,
+  Settings,
+  ShoppingBag,
+  Tag,
+  Users
 } from 'lucide-react'
 import { usePhoenixChannel } from '@/lib/usePhoenixChannel'
 
@@ -44,6 +56,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
+
 const navGroups: NavGroup[] = [
   {
     name: "Dashboard",
@@ -54,37 +67,40 @@ const navGroups: NavGroup[] = [
   {
     name: "Sellers",
     items: [
-      { name: "Sellers", href: "/sellers", icon: UsersIcon, countKey: "total_sellers" },
-      { name: "Membership Packages", href: "/membership_packages", icon: PackageIcon },
-      { name: "Payments", href: "/payments", icon: CreditCardIcon },
-      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBagIcon },
+      { name: "Sellers", href: "/sellers", icon: Users, countKey: "total_sellers" },
+      { name: "Membership Packages", href: "/membership_packages", icon: Package },
+      { name: "Payments", href: "/payments", icon: CreditCard },
+      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBag },
     ]
   },
   {
     name: "Products",
     items: [
-      { name: "Products", href: "/products", icon: BoxIcon },
-      { name: "Variants", href: "/variants", icon: TagIcon },
-      { name: "Unit of Measurement", href: "/unit_measurements", icon: ScaleIcon },
-      { name: "Price Groups", href: "/price_groups", icon: DollarSignIcon },
+      { name: "Brands", href: "/brands", icon: Box },
+      { name: "Categories", href: "/categories", icon: Box },
+      { name: "Products", href: "/products", icon: Box },
+      { name: "Variants", href: "/variants", icon: Tag },
+      { name: "Unit of Measurement", href: "/unit_measurements", icon: Scale },
+      { name: "Price Groups", href: "/price_groups", icon: DollarSign },
     ]
   },
   {
     name: "Operations",
     items: [
-      { name: "Locations", href: "/locations", icon: MapPinIcon, },
-      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: MegaphoneIcon, },
-      { name: "Marketing Banners", href: "/marketing_banners", icon: MegaphoneIcon, },
-      { name: "Participating Products", href: "/marketing_banner_products", icon: MegaphoneIcon, },
-
-
+      { name: "Locations", href: "/locations", icon: MapPin },
+      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: Megaphone },
+      { name: "Marketing Banners", href: "/marketing_banners", icon: Megaphone },
+      { name: "Participating Products", href: "/marketing_banner_products", icon: Megaphone },
+      { name: "Staffs", href: "/staffs", icon: Users },
     ]
   },
   {
     name: "System",
     items: [
-      { name: "Settings", href: "/settings", icon: SettingsIcon },
-      { name: "Logout", href: "/login", icon: LogOutIcon },
+      { name: "Settings", href: "/settings", icon: Settings },
+      { name: "Roles", href: "/roles", icon: Settings },
+      { name: "App Routes", href: "/app_routes", icon: Settings },
+      { name: "Logout", href: "/login", icon: LogOut },
     ]
   }
 ]

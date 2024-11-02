@@ -30,6 +30,14 @@ export default function SellersPage() {
                 'username',
                 'email',
                 'phone',
+                {
+                  label: 'staff_id',
+                  customCols: null,
+                  selection: 'Staff',
+                  search_queries: ['a.name'],
+                  newData: 'name',
+                  title_key: 'name'
+              }
 
               ]
             },

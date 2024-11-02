@@ -46,7 +46,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   const key = typeof keyName === 'string' ? { label: keyName } : keyName
   const inputKey = input?.key || (typeof keyName === 'string' ? keyName : keyName.label)
-  let value = data[inputKey];
+  let value = data ? data[inputKey] :  '';
 
   if (inputKey.includes(".")) {
     let inputKeys = inputKey.split(".")
