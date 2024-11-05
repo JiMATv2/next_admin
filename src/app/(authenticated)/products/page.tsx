@@ -1,10 +1,5 @@
 'use client';
 import DataTable from "@/components/data/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useAuth } from "@/lib/auth"
-import { PlusIcon } from 'lucide-react'
 
 export default function PaymentsPage() {
 
@@ -27,7 +22,7 @@ export default function PaymentsPage() {
             <DataTable canDelete={true}
                 showNew={true}
                 model={'Product'}
-                preloads={['seller']}
+                preloads={['seller', 'sub_category', 'category', 'brand']}
                 search_queries={['a.name']}
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
@@ -39,7 +34,23 @@ export default function PaymentsPage() {
                                 'name',
                                 'short_desc',
                                 { label: 'is_visible', boolean: true },
-                                { label: 'long_desc', editor2: true },
+                             
+                                {
+                                    label: 'brand_id',
+                                    customCols: null,
+                                    selection: 'Brand',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                },
+                                {
+                                    label: 'sub_category_id',
+                                    customCols: null,
+                                    selection: 'SubCategory',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                },
                                 {
                                     label: 'seller_id',
                                     customCols: null,
@@ -55,7 +66,9 @@ export default function PaymentsPage() {
                         {
                             title: 'Detail',
                             list: [
-
+                                'id',
+                                { label: 'is_visible', boolean: true },
+                                { label: 'long_desc', editor2: true },
                             ]
                         },
                     ]
@@ -64,6 +77,9 @@ export default function PaymentsPage() {
 
 
                     { label: 'Timestamp', data: 'inserted_at',   formatDateTime: true , offset: 8 },
+                    { label: 'Brand', data: 'name', through: ['brand'] },
+                    { label: 'Category', data: 'name', through: ['category'] },
+                    { label: 'SubCategory', data: 'name', through: ['sub_category'] },
                     { label: 'Seller', data: 'name', through: ['seller'] },
                     { label: 'Name', data: 'name' },
 

@@ -5,6 +5,8 @@ import { useModel } from '@/lib/provider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Image from "next/image"
 import { JSONTree } from 'react-json-tree';
+import { Input } from "@/components/ui/input"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -12,8 +14,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle, DialogTrigger
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+
 import { genInputs, postData } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
@@ -44,10 +49,13 @@ interface CustomCol {
     editor?: boolean
     editor2?: boolean
     upload?: boolean
+    alt_class?: string
+    date?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
   label: string;
+  alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string | string[];
   search_queries: string[];
@@ -474,9 +482,15 @@ export default function DataTable({
     if (column.color) {
       console.log(column)
       console.log(value)
+      let showVal = value
+
+
+      if ([true, false].includes(value)) {
+        showVal = value ? 'Yes' : 'No'
+      }
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {value ? 'Yes' : 'No'}
+           {showVal.replace("_", " ")}
         </Badge>
       )
     }
@@ -505,6 +519,10 @@ export default function DataTable({
       return (
         <div className="hasJson">
           <JSONTree data={value}
+            shouldExpandNodeInitially={(k, d, l) => {
+
+              return false; 
+             }}
             theme={{
               extend: theme,
 

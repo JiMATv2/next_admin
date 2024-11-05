@@ -1,7 +1,7 @@
 'use client';
 import DataTable from "@/components/data/table"
 
-export default function PaymentsPage() {
+export default function LocationsPage() {
 
     // This is a placeholder for future implementation
 
@@ -15,16 +15,14 @@ export default function PaymentsPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">Roles</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Banner Positions</h2>
 
             </div>
 
             <DataTable canDelete={true}
                 showNew={true}
-                model={'Role'}
-                // preloads={['seller']}
-                // join_statements={[{seller: 'seller'}]}
-                // search_queries={['a.channel_ref|b.name']}
+                model={'BannerPosition'}
+                search_queries={['a.name']}
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
@@ -32,7 +30,10 @@ export default function PaymentsPage() {
                             title: 'General',
                             list: [
                                 'id',
-                                'name', 
+                                'name',
+                            
+
+
 
                             ]
                         },
@@ -46,10 +47,10 @@ export default function PaymentsPage() {
                 }
                 columns={[
 
-
-                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
                     { label: 'Name', data: 'name' },
-                    { label: 'Desc', data: 'desc' },
+                    
+                    { label: 'Timestamp', data: 'inserted_at',  formatDateTime: true , offset: 8 },
+
 
 
                 ]}

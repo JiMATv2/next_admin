@@ -1,10 +1,5 @@
 'use client';
 import DataTable from "@/components/data/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useAuth } from "@/lib/auth"
-import { PlusIcon } from 'lucide-react'
 
 export default function MarketingBannerPage() {
 
@@ -42,6 +37,14 @@ export default function MarketingBannerPage() {
                             list: [
                                 'id',
                                 'name',
+                                {
+                                    label: 'banner_position_id',
+                                    customCols: null,
+                                    selection: 'BannerPosition',
+                                    search_queries: ['a.name'],
+                                    newData: 'name',
+                                    title_key: 'name'
+                                },
                                 {
                                     label: 'marketing_campaign_id',
                                     customCols: null,

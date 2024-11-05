@@ -2,13 +2,11 @@
 import DataTable from "@/components/data/table"
 import { useEffect, useState } from "react";
 
-export default function PaymentsPage({ params }: { params: { variant_id: string } }) {
+export default function PaymentsPage({ params }: { params: { marketing_campaign_id: string } }) {
     const [data, setData] = useState<any[]>([]);
-   
-    console.log(data)
 
-    const variantId = params.variant_id
-    // Load data from localStorage when the component mounts
+    const marketingCampaignId = params.marketing_campaign_id
+
     useEffect(() => {
         const storedData = localStorage.getItem('modelData');  // Replace 'modelData' with your key
         if (storedData) {
@@ -16,10 +14,11 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
         }
     }, []);
 
+
     const [title, setTitle] = useState<string>('');
     useEffect(() => {
         let filteredData = data.filter((v, i) => {
-            return v.id == variantId
+            return v.id == marketingCampaignId
         })[0]
         console.log(filteredData)
         if (filteredData) {
@@ -27,8 +26,6 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
         }
 
     }, [data])
-    // This is a placeholder for future implementation
-
     function approveFn(data: any) {
         console.log(data)
         return null;
@@ -36,19 +33,20 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
 
 
     return (
+        
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">{title} Prices </h2>
+                <h2 className="text-3xl font-bold tracking-tight">Submitted Banners - {title}</h2>
 
             </div>
 
 
             <DataTable canDelete={true}
                 showNew={true}
-                appendQueries={{ variant_id: variantId }}
-                model={'Price'}
-                preloads={['variant', 'price_group']}
-                search_queries={['b.name']}
+                appendQueries={{ marketing_campaign_id: marketingCampaignId }}
+                model={'MarketingBanner'}
+                preloads={['seller']}
+                search_queries={['a.name']}
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
@@ -56,16 +54,8 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
                             title: 'General',
                             list: [
                                 'id',
-                                'variant_id',
-                                'amount',
-                                {
-                                    label: 'price_group_id',
-                                    customCols: null,
-                                    selection: 'PriceGroup',
-                                    search_queries: ['a.name'],
-                                    newData: 'name',
-                                    title_key: 'name'
-                                }
+                                {label: 'is_approved', boolean: true},
+                                // {label: 'background_img_url', upload: true},
 
                             ]
                         },
@@ -78,9 +68,28 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
                     ]
                 }
                 columns={[
-                    { label: 'Variant', data: 'name', through: ['variant'] },
-                    { label: 'Group', data: 'name', through: ['price_group'] },
-                    { label: 'Amount', data: 'amount' },
+           
+
+            
+                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+                    { label: 'Seller', data: 'name', through: ['seller'] },
+                    { label: 'Image', data: 'img_url', showImg: true },
+                    { label: '', data: 'img_url', showPreview: true },
+                    {
+                        label: 'Approved?', data: 'is_approved', color: [
+                            {
+                                key: false,
+                                value: 'destructive'
+                            },
+
+                            {
+                                key: true,
+                                value: 'default'
+                            }
+                        ]
+                    },
+               
+               
 
 
 

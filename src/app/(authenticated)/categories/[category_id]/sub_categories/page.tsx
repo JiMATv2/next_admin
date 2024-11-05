@@ -1,11 +1,5 @@
 'use client';
 import DataTable from "@/components/data/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useAuth } from "@/lib/auth"
-import { PlusIcon } from 'lucide-react'
-import ModelProvider, { useModel } from '@/lib/provider';
 import { useEffect, useState } from "react";
 
 export default function PaymentsPage({ params }: { params: { category_id: string } }) {
@@ -21,6 +15,17 @@ export default function PaymentsPage({ params }: { params: { category_id: string
     }, []);
     // This is a placeholder for future implementation
 
+    const [title, setTitle] = useState<string>('');
+    useEffect(() => {
+        let filteredData = data.filter((v, i) => {
+            return v.id == categoryId
+        })[0]
+        console.log(filteredData)
+        if (filteredData) {
+           setTitle(filteredData.name);
+        }
+
+    }, [data])
     function approveFn(data: any) {
         console.log(data)
         return null;
@@ -30,7 +35,7 @@ export default function PaymentsPage({ params }: { params: { category_id: string
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">Sub Categories - {data[0].name}</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Sub Categories - {title}</h2>
 
             </div>
 
