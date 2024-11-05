@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/lib/auth"
+import ModelProvider from "@/lib/provider";
 import { PlusIcon } from 'lucide-react'
 
 export default function PaymentsPage() {
@@ -15,9 +16,14 @@ export default function PaymentsPage() {
         console.log(data)
         return null;
     }
+    function hrefFn(data: any) {
+        console.log(data)
+        return '/categories/' + data.id + '/sub_categories';
+    }
 
 
     return (
+        <ModelProvider>
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold tracking-tight">Categories</h2>
@@ -30,7 +36,7 @@ export default function PaymentsPage() {
                 // preloads={['seller']}
                 // join_statements={[{seller: 'seller'}]}
                 // search_queries={['a.channel_ref|b.name']}
-                // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
+                buttons={[{ name: 'Sub', onclickFn: approveFn , href: hrefFn}]}
                 customCols={
                     [
                         {
@@ -83,5 +89,6 @@ export default function PaymentsPage() {
 
             />
         </div>
+        </ModelProvider>
     )
 }

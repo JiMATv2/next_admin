@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import ModelProvider, { useModel } from '@/lib/provider';
+import { useModel } from '@/lib/provider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Image from "next/image"
 import { JSONTree } from 'react-json-tree';
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -14,19 +13,16 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { genInputs, postData } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
-import { useAuth } from '@/lib/auth'
 import { ImageIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardFooter } from '../ui/card';
 
 // Assuming these are defined in your environment variables
 
@@ -36,7 +32,6 @@ interface CustomCol {
   title: string;
 
   list: (string | {
-    alt_class?: string 
     label: string
     hidden?: boolean
     value?: any
@@ -49,14 +44,12 @@ interface CustomCol {
     editor?: boolean
     editor2?: boolean
     upload?: boolean
-    date?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
   label: string;
-  alt_class?: string;
   customCols?: CustomCol[] | null;
-  selection: string;
+  selection: string | string[];
   search_queries: string[];
   newData: string;
   title_key: string;
@@ -64,11 +57,12 @@ interface CustomSubCol {
 interface DataTableProps {
   appendQueries?: Record<any, any>
   showNew?: boolean
+  showGrid?: boolean
   canDelete?: boolean
   search_queries?: string[]
   join_statements?: Record<any, any>
   model: string
-  preloads?: string[]
+  preloads?: string[] | Record<any, any>
   buttons?: {
     name: string
     onclickFn: (item: any, refreshData: () => void, confirmModalFn: (bool: boolean, message: string, fn: () => void, opts?: any) => void) => void
@@ -90,6 +84,7 @@ interface DataTableProps {
     showDateTime?: boolean
     color?: { key: string | boolean, value: string }[]
     through?: string[]
+    altClass?: string
   }[]
 }
 
@@ -97,6 +92,7 @@ export default function DataTable({
 
   appendQueries = {},
   showNew = false,
+  showGrid = false,
   canDelete = false,
   join_statements = [],
   search_queries = [],
@@ -146,10 +142,10 @@ export default function DataTable({
     if (!isLoading) {
       fetchColInputs();
     }
+    
 
 
-
-
+    
   }, []);
 
   const buildSearchString = useCallback((query: any) => {
@@ -193,7 +189,6 @@ export default function DataTable({
 
     console.log('already set isLoading to TRUE');
     setError(null);
-   
     let finalSearchQuery ;
     finalSearchQuery = Object.keys(searchQuery).length == 0 ? '' : searchQuery
     const apiData = {
@@ -231,8 +226,8 @@ export default function DataTable({
       console.error('An error occurred', error);
       setError('Failed to fetch data. Please try again.');
     } finally {
-      isLoading2 = true;
-
+      isLoading2 = true; 
+    
     }
   },
     [model, searchQuery, appendQueries, preloads, buildSearchString]
@@ -244,36 +239,36 @@ export default function DataTable({
     }
   }, [currentPage, searchQuery]); // Trigger only when these states change
 
-  // Function to update URL with the current search query
-  const updateUrlWithSearch = useCallback(() => {
-    const searchParam = JSON.stringify(searchQuery)
-    const newParams = new URLSearchParams(searchParams.toString())
-    newParams.set('search', searchParam)
-    console.log(router)
-    router.replace(`${window.location.pathname}?${newParams.toString()}`, { scroll: false })
-  }, [router, searchParams, searchQuery])
 
-  // Function to parse search query from URL
-  const parseSearchFromUrl = useCallback(() => {
-    const searchParam = searchParams.get('search')
-    console.log(searchParam)
-    if (searchParam) {
-      try {
-        const parsedSearch = JSON.parse(searchParam)
-        console.log(parsedSearch)
-        setSearchQuery(parsedSearch)
-      } catch (error) {
-        console.error('Error parsing search query from URL:', error)
-      }
-    }
-  }, [searchParams])
+  // const updateUrlWithSearch = useCallback(() => {
+  //   const searchParam = JSON.stringify(searchQuery)
+  //   const newParams = new URLSearchParams(searchParams.toString())
+  //   newParams.set('search', searchParam)
+  //   console.log(router)
+  //   router.replace(`${window.location.pathname}?${newParams.toString()}`, { scroll: false })
+  // }, [router, searchParams, searchQuery])
+
+
+  // const parseSearchFromUrl = useCallback(() => {
+  //   const searchParam = searchParams.get('search')
+  //   console.log(searchParam)
+  //   if (searchParam) {
+  //     try {
+  //       const parsedSearch = JSON.parse(searchParam)
+  //       console.log(parsedSearch)
+  //       setSearchQuery(parsedSearch)
+  //     } catch (error) {
+  //       console.error('Error parsing search query from URL:', error)
+  //     }
+  //   }
+  // }, [searchParams])
 
   // Effect to update URL when search query changes
   useEffect(() => {
     if (Object.keys(searchQuery).length) {
-      updateUrlWithSearch()
+      // updateUrlWithSearch()
     }
-  }, [searchQuery, updateUrlWithSearch])
+  }, [searchQuery])
 
 
 
@@ -281,12 +276,12 @@ export default function DataTable({
   const handleSearch = (newSearchQuery: any) => {
     setSearchQuery(newSearchQuery)
     setCurrentPage(1)
-    updateUrlWithSearch()
+    // updateUrlWithSearch()
   }
   // Effect to parse search query from URL on initial load
-  useEffect(() => {
-    parseSearchFromUrl()
-  }, [parseSearchFromUrl])
+  // useEffect(() => {
+  //   parseSearchFromUrl()
+  // }, [parseSearchFromUrl])
 
   const handleNew = () => {
     setSelectedItem({ ...{ id: "0" }, ...appendQueries })
@@ -334,6 +329,7 @@ export default function DataTable({
 
 
   interface Column {
+    altClass?: string;
     data: string
     subtitle?: {label: string, data: string }
     showPreview?: boolean
@@ -343,11 +339,13 @@ export default function DataTable({
     color?: { key: string | boolean; value: string }[]
     showImg?: boolean
     showJson?: boolean
+
     isBadge?: boolean
     offset?: number
   }
 
   const renderCell = (item: any, column: Column) => {
+ 
 
     const url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT
 
@@ -362,23 +360,23 @@ export default function DataTable({
         if (data[through[0]]) {
 
           if (column.showImg) {
-            console.log(val)
-            if (val) {
+            console.log(data[through[0]][0])
+            if (data[through[0]][0]) {
               return (
-                <div style={{ width: '120px' }}>
+            
                   <Image
                     className="rounded-lg"
                     src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
                     alt={`Image for ${column.data}`}
-                    width={120}
-                    height={80}
+                    width={160}
+                    height={120}
                   />
-                </div>
+               
               )
+            } else {
+              return <ImageIcon></ImageIcon>
             }
-          } else {
-
-          }
+          } 
 
           return data[through[0]][val]
         } else {
@@ -388,6 +386,7 @@ export default function DataTable({
 
 
       } catch (e) {
+        console.error(e)
         return ''
       }
     }
@@ -421,6 +420,7 @@ export default function DataTable({
 
     let value = item[column.data]
 
+    
     if (column.subtitle) {
       return (
         <>
@@ -474,16 +474,9 @@ export default function DataTable({
     if (column.color) {
       console.log(column)
       console.log(value)
-
-      let showVal = value
-
-
-      if ([true, false].includes(value)) {
-        showVal = value ? 'Yes' : 'No'
-      }
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {showVal.replace("_", " ")}
+          {value ? 'Yes' : 'No'}
         </Badge>
       )
     }
@@ -512,11 +505,14 @@ export default function DataTable({
       return (
         <div className="hasJson">
           <JSONTree data={value}
-         shouldExpandNodeInitially={(k, d, l) => {
+            theme={{
+              extend: theme,
 
-          return false; 
-         }}
-    
+              valueLabel: {
+                textDecoration: 'underline',
+              },
+
+            }}
 
 
           />
@@ -558,6 +554,7 @@ export default function DataTable({
       )
     }
 
+   
     return value || ''
   }
 
@@ -583,6 +580,28 @@ export default function DataTable({
         }><PlusIcon className="mr-2 h-4 w-4" />New</Button>}
       </div>
       <div className=" rounded-md border">
+        {showGrid && 
+        <div className='grid grid-cols-6 gap-4'>
+          
+          {items.map((item, itemIndex) => (
+             
+                <div key={itemIndex} className='p-6'>
+                {columns.map((column, columnIndex) => (
+                  <div key={columnIndex} >
+                    {column.altClass && <div className={column.altClass}>
+                      {renderCell(item, column)}
+                      </div>}  
+                      {!column.altClass && renderCell(item, column)}
+                  </div>
+                ))}
+                </div>
+                
+            
+            ))}
+          
+          </div>}
+
+        {!showGrid &&
         <Table>
           <TableHeader>
             <TableRow>
@@ -646,6 +665,7 @@ export default function DataTable({
             ))}
           </TableBody>
         </Table>
+        }
       </div>
 
       <div className="flex justify-center space-x-2">

@@ -8,12 +8,10 @@ import { PlusIcon } from 'lucide-react'
 import ModelProvider, { useModel } from '@/lib/provider';
 import { useEffect, useState } from "react";
 
-export default function PaymentsPage({ params }: { params: { variant_id: string } }) {
+export default function PaymentsPage({ params }: { params: { category_id: string } }) {
     const [data, setData] = useState<any[]>([]);
-    const [title, setTitle] = useState<string>('');
-    console.log(data)
 
-    const variantId = params.variant_id
+    const categoryId = params.category_id
     // Load data from localStorage when the component mounts
     useEffect(() => {
         const storedData = localStorage.getItem('modelData');  // Replace 'modelData' with your key
@@ -21,18 +19,6 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
             setData(JSON.parse(storedData));  // Parse and set the data in state
         }
     }, []);
-
-
-    useEffect(() => {
-        let filteredData = data.filter((v, i) => {
-            return v.id == variantId
-        })[0]
-        console.log(filteredData)
-        if (filteredData) {
-           setTitle(filteredData.name);
-        }
-
-    }, [data])
     // This is a placeholder for future implementation
 
     function approveFn(data: any) {
@@ -44,17 +30,17 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">{title} Prices </h2>
+                <h2 className="text-3xl font-bold tracking-tight">Sub Categories - {data[0].name}</h2>
 
             </div>
 
 
             <DataTable canDelete={true}
                 showNew={true}
-                appendQueries={{ variant_id: variantId }}
-                model={'Price'}
-                preloads={['variant', 'price_group']}
-                search_queries={['b.name']}
+                appendQueries={{ category_id: categoryId }}
+                model={'SubCategory'}
+                preloads={['category']}
+                search_queries={['a.name']}
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [
@@ -62,16 +48,12 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
                             title: 'General',
                             list: [
                                 'id',
-                                'variant_id',
-                                'amount',
-                                {
-                                    label: 'price_group_id',
-                                    customCols: null,
-                                    selection: 'PriceGroup',
-                                    search_queries: ['a.name'],
-                                    newData: 'name',
-                                    title_key: 'name'
-                                }
+                                'category_id',
+                                'name',
+                                'group',
+                                'desc',
+                                {label: 'img_url', upload: true},
+                                {label: 'background_img_url', upload: true},
 
                             ]
                         },
@@ -84,9 +66,16 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
                     ]
                 }
                 columns={[
-                    { label: 'Variant', data: 'name', through: ['variant'] },
-                    { label: 'Group', data: 'name', through: ['price_group'] },
-                    { label: 'Amount', data: 'amount' },
+           
+
+            
+                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+                    { label: 'Parent', data: 'name', through: ['category'] },
+                    { label: 'Image', data: 'img_url', showImg: true },
+                    { label: '', data: 'img_url', showPreview: true },
+                    { label: 'Name', data: 'name', },
+                    { label: 'Description', data: 'desc', },
+               
 
 
 
