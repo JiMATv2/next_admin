@@ -28,6 +28,7 @@ import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '../ui/card';
+import { Anybody } from 'next/font/google';
 
 // Assuming these are defined in your environment variables
 
@@ -82,7 +83,7 @@ interface DataTableProps {
   columns: {
     label: string
     data: string
-    subtitle?: {label: string, data: string }
+    subtitle?: { label: string, data: string }
     formatDateTime?: boolean
     offset?: number
     isBadge?: boolean
@@ -150,15 +151,14 @@ export default function DataTable({
     if (!isLoading) {
       fetchColInputs();
     }
-    
 
 
-    
+
+
   }, []);
 
   const buildSearchString = useCallback((query: any) => {
 
-    console.log(query)
 
     if (Object.keys(query).length == 0) {
       return null
@@ -191,16 +191,29 @@ export default function DataTable({
       .join('&');
   }
   const fetchData = useCallback(async (pageNumber: number) => {
-    console.log('is loading?...' + isLoading2);
+
     if (isLoading2) return; // Avoid fetching data while it's already being fetched
     isLoading2 = true;
 
-    console.log('already set isLoading to TRUE');
+
     setError(null);
-    let finalSearchQuery ;
-    finalSearchQuery = Object.keys(searchQuery).length == 0 ? '' : searchQuery
+    let finalSearchQuery: Record<any, any> | string = {};
+    finalSearchQuery = searchQuery
+    console.log(finalSearchQuery)
+
+    try {
+      for (const key in finalSearchQuery) {
+        if (finalSearchQuery[key] === '') {
+          delete finalSearchQuery[key];
+        }
+      }
+
+    } catch (e) {
+      finalSearchQuery = ''
+    }
+
     const apiData = {
-      search: { regex: 'false', value: finalSearchQuery},
+      search: { regex: 'false', value: finalSearchQuery },
       additional_join_statements: JSON.stringify(join_statements),
       additional_search_queries: buildSearchString(searchQuery),
       draw: '1',
@@ -214,7 +227,7 @@ export default function DataTable({
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null);
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
-    console.log(apiData)
+    console.info(apiData)
     try {
       const response = await fetch(`${blog_url}/svt_api/${model}?${queryString}`, {
         headers: {
@@ -234,8 +247,8 @@ export default function DataTable({
       console.error('An error occurred', error);
       setError('Failed to fetch data. Please try again.');
     } finally {
-      isLoading2 = true; 
-    
+      isLoading2 = true;
+
     }
   },
     [model, searchQuery, appendQueries, preloads, buildSearchString]
@@ -308,7 +321,7 @@ export default function DataTable({
     setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
       (async () => {
-        console.log("Deleting item", item.id);
+
 
         await postData({
           method: "DELETE",
@@ -316,7 +329,7 @@ export default function DataTable({
         });
 
         await fetchData(currentPage); // Explicitly await fetchData
-        console.log("fetch after delete?");
+
         setConfirmModalOpen(false);
 
         toast({
@@ -339,7 +352,7 @@ export default function DataTable({
   interface Column {
     altClass?: string;
     data: string
-    subtitle?: {label: string, data: string }
+    subtitle?: { label: string, data: string }
     showPreview?: boolean
     formatDate?: boolean
     formatDateTime?: boolean
@@ -353,13 +366,13 @@ export default function DataTable({
   }
 
   const renderCell = (item: any, column: Column) => {
- 
+
 
     const url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT
 
     const badgeColor = (value: string | boolean, conditionList: { key: string | boolean; value: string }[]) => {
       const result = conditionList.find(v => v.key === value)
-      console.log(result)
+
       return result ? result.value : 'destructive'
     }
 
@@ -368,23 +381,23 @@ export default function DataTable({
         if (data[through[0]]) {
 
           if (column.showImg) {
-            console.log(data[through[0]][0])
+
             if (data[through[0]][0]) {
               return (
-            
-                  <Image
-                    className="rounded-lg"
-                    src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
-                    alt={`Image for ${column.data}`}
-                    width={160}
-                    height={120}
-                  />
-               
+
+                <Image
+                  className="rounded-lg"
+                  src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
+                  alt={`Image for ${column.data}`}
+                  width={160}
+                  height={120}
+                />
+
               )
             } else {
               return <ImageIcon></ImageIcon>
             }
-          } 
+          }
 
           return data[through[0]][val]
         } else {
@@ -428,7 +441,7 @@ export default function DataTable({
 
     let value = item[column.data]
 
-    
+
     if (column.subtitle) {
       return (
         <>
@@ -480,8 +493,7 @@ export default function DataTable({
     }
 
     if (column.color) {
-      console.log(column)
-      console.log(value)
+
       let showVal = value
 
 
@@ -490,7 +502,7 @@ export default function DataTable({
       }
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-           {showVal.replace("_", " ")}
+          {showVal.replace("_", " ")}
         </Badge>
       )
     }
@@ -521,8 +533,8 @@ export default function DataTable({
           <JSONTree data={value}
             shouldExpandNodeInitially={(k, d, l) => {
 
-              return false; 
-             }}
+              return false;
+            }}
             theme={{
               extend: theme,
 
@@ -541,7 +553,7 @@ export default function DataTable({
     }
 
     if (column.showImg) {
-      console.log(value)
+
       if (value) {
         return (
           <div style={{ width: '120px' }}>
@@ -572,7 +584,7 @@ export default function DataTable({
       )
     }
 
-   
+
     return value || ''
   }
 
@@ -589,6 +601,8 @@ export default function DataTable({
     <div className="space-y-4">
       <div className="flex space-x-2">
         <SearchInput
+          model={model}
+          join_statements={join_statements}
           oriSearchQuery={searchQuery}
           searchQueries={search_queries} onSearch={handleSearch} />
 
@@ -598,91 +612,91 @@ export default function DataTable({
         }><PlusIcon className="mr-2 h-4 w-4" />New</Button>}
       </div>
       <div className=" rounded-md border">
-        {showGrid && 
-        <div className='grid grid-cols-6 gap-4'>
-          
-          {items.map((item, itemIndex) => (
-             
-                <div key={itemIndex} className='p-6'>
+        {showGrid &&
+          <div className='grid grid-cols-6 gap-4'>
+
+            {items.map((item, itemIndex) => (
+
+              <div key={itemIndex} className='p-6'>
                 {columns.map((column, columnIndex) => (
                   <div key={columnIndex} >
                     {column.altClass && <div className={column.altClass}>
                       {renderCell(item, column)}
-                      </div>}  
-                      {!column.altClass && renderCell(item, column)}
+                    </div>}
+                    {!column.altClass && renderCell(item, column)}
                   </div>
                 ))}
-                </div>
-                
-            
+              </div>
+
+
             ))}
-          
+
           </div>}
 
         {!showGrid &&
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableHead key={index}>{column.label}</TableHead>
-              ))}
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item, itemIndex) => (
-              <TableRow key={itemIndex}>
-                {columns.map((column, columnIndex) => (
-                  <TableCell key={columnIndex}>
-                    {renderCell(item, column)}
-                  </TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableHead key={index}>{column.label}</TableHead>
                 ))}
-                <TableCell>
-                  <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
-                  {buttons.map((button, buttonIndex) => {
-                    if (button.showCondition && !button.showCondition(item)) {
-                      return null;
-                    }
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item, itemIndex) => (
+                <TableRow key={itemIndex}>
+                  {columns.map((column, columnIndex) => (
+                    <TableCell key={columnIndex}>
+                      {renderCell(item, column)}
+                    </TableCell>
+                  ))}
+                  <TableCell>
+                    <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                    {buttons.map((button, buttonIndex) => {
+                      if (button.showCondition && !button.showCondition(item)) {
+                        return null;
+                      }
 
-                    const buttonProps = {
-                      key: buttonIndex,
-                      variant: "ghost" as const,
-                      onClick: button.onclickFn
-                        ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
-                        : undefined
-                    };
+                      const buttonProps = {
+                        key: buttonIndex,
+                        variant: "ghost" as const,
+                        onClick: button.onclickFn
+                          ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                          : undefined
+                      };
 
-                    const buttonContent = <span>{button.name}</span>;
+                      const buttonContent = <span>{button.name}</span>;
 
-                    if (button.href) {
-                      const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                      if (button.href) {
+                        const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                        return (
+                          <Button asChild {...buttonProps}>
+                            <Link href={href}>
+                              {buttonContent}
+                            </Link>
+                          </Button>
+                        );
+                      }
+
                       return (
-                        <Button asChild {...buttonProps}>
-                          <Link href={href}>
-                            {buttonContent}
-                          </Link>
+                        <Button {...buttonProps}>
+                          {buttonContent}
                         </Button>
                       );
-                    }
-
-                    return (
-                      <Button {...buttonProps}>
-                        {buttonContent}
-                      </Button>
-                    );
-                  })}
+                    })}
 
 
 
 
-                  {canDelete && (
-                    <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    {canDelete && (
+                      <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         }
       </div>
 

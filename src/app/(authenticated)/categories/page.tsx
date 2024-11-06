@@ -18,7 +18,7 @@ export default function PaymentsPage() {
 
 
     return (
-        <ModelProvider>
+        <ModelProvider modelName="categories">
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold tracking-tight">Categories</h2>

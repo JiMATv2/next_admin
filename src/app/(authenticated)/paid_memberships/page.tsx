@@ -23,8 +23,8 @@ export default function PaymentsPage() {
                 showNew={true}
                 model={'PaidMembership'}
                 preloads={['membership_package', 'seller', 'payment']}
-                // join_statements={[{}]}
-                search_queries={['b.name']} 
+                join_statements={[{membership_package: 'membership_package'}, {seller: 'seller'}]}
+                search_queries={['b.name|c.name']} 
                 // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
                 customCols={
                     [

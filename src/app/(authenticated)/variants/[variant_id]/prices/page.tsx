@@ -10,7 +10,7 @@ export default function PaymentsPage({ params }: { params: { variant_id: string 
     const variantId = params.variant_id
     // Load data from localStorage when the component mounts
     useEffect(() => {
-        const storedData = localStorage.getItem('modelData');  // Replace 'modelData' with your key
+        const storedData = localStorage.getItem('variantsData');  // Replace 'modelData' with your key
         if (storedData) {
             setData(JSON.parse(storedData));  // Parse and set the data in state
         }

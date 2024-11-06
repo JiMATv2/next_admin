@@ -77,11 +77,13 @@ export default function PaymentsPage() {
 
 
                     { label: 'Timestamp', data: 'inserted_at',   formatDateTime: true , offset: 8 },
+                    { label: 'Name', data: 'name' },
+                    { label: 'Seller', data: 'name', through: ['seller'] },
+                 
                     { label: 'Brand', data: 'name', through: ['brand'] },
                     { label: 'Category', data: 'name', through: ['category'] },
                     { label: 'SubCategory', data: 'name', through: ['sub_category'] },
-                    { label: 'Seller', data: 'name', through: ['seller'] },
-                    { label: 'Name', data: 'name' },
+       
 
                     {
                         label: 'Visible?', data: 'is_visible', color: [

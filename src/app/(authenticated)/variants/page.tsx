@@ -19,7 +19,7 @@ export default function PaymentsPage() {
 
 
     return (
-        <ModelProvider>
+        <ModelProvider modelName="variants">
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold tracking-tight">Product Variants</h2>
@@ -30,7 +30,8 @@ export default function PaymentsPage() {
                 showNew={true}
                 model={'Variant'}
                 preloads={['product', 'uom']}
-                search_queries={['b.name']}
+                join_statements={[{product: 'product'}]}
+                search_queries={['a.name|b.name']}
                 buttons={[{ name: 'Prices', onclickFn: approveFn, href: hrefFn }]}
                 customCols={
                     [
@@ -72,12 +73,13 @@ export default function PaymentsPage() {
                     ]
                 }
                 columns={[
-                    { label: 'Image', data: 'img_url', showImg: true },
-                    { label: 'Name', data: 'name' },
-                    { label: 'Unit', data: 'name', through: ['uom'] },
-                    { label: 'Barcode', data: 'sku_barcode' },
-                    { label: 'Product', data: 'name', through: ['product'] },
                     { label: 'Timestamp', data: 'inserted_at', formatDateTime: true , offset: 8},
+                    { label: 'Image', data: 'img_url', showImg: true },
+                    { label: 'Variant', data: 'name' },
+                    { label: 'Unit', data: 'name', through: ['uom'] },
+                    { label: 'Product', data: 'name', through: ['product'] },
+                    { label: 'Barcode', data: 'sku_barcode' },
+            
 
 
 

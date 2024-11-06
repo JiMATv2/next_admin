@@ -1,5 +1,7 @@
 'use client';
+import { BreadcrumbHelper } from "@/components/data/breadcrumbHelper";
 import DataTable from "@/components/data/table"
+import ModelProvider from "@/lib/provider";
 import { useEffect, useState } from "react";
 
 export default function PaymentsPage({ params }: { params: { marketing_campaign_id: string } }) {
@@ -8,7 +10,7 @@ export default function PaymentsPage({ params }: { params: { marketing_campaign_
     const marketingCampaignId = params.marketing_campaign_id
 
     useEffect(() => {
-        const storedData = localStorage.getItem('modelData');  // Replace 'modelData' with your key
+        const storedData = localStorage.getItem('marketingCampaignsData');  // Replace 'modelData' with your key
         if (storedData) {
             setData(JSON.parse(storedData));  // Parse and set the data in state
         }
@@ -22,84 +24,134 @@ export default function PaymentsPage({ params }: { params: { marketing_campaign_
         })[0]
         console.log(filteredData)
         if (filteredData) {
-           setTitle(filteredData.name);
+            setTitle(filteredData.name);
         }
 
     }, [data])
     function approveFn(data: any) {
-        console.log(data)
+      
         return null;
     }
 
+    function hrefFn(data: any) {
+     
+        return '/marketing_banners/' + data.id + '/marketing_banner_products';
+    }
 
     return (
-        
+
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold tracking-tight">Submitted Banners - {title}</h2>
 
-            </div>
+            <BreadcrumbHelper items={[
+                { link: '/marketing_campaigns', title: 'Marketing Campaigns' },
+                { link: `/marketing_campaigns/${marketingCampaignId}/marketing_banners`, title: `${title}` },
+                // { link: '', title: 'Edit Banner' }
+            ]} />
 
+            <ModelProvider modelName="marketingBanners">
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-3xl font-bold tracking-tight">Submitted Banners - {title}</h2>
 
-            <DataTable canDelete={true}
-                showNew={true}
-                appendQueries={{ marketing_campaign_id: marketingCampaignId }}
-                model={'MarketingBanner'}
-                preloads={['seller']}
-                search_queries={['a.name']}
-                // buttons={[{ name: 'Approve', onclickFn: approveFn }]}
-                customCols={
-                    [
-                        {
-                            title: 'General',
-                            list: [
-                                'id',
-                                {label: 'is_approved', boolean: true},
-                                // {label: 'background_img_url', upload: true},
+                    </div>
 
-                            ]
-                        },
-                        {
-                            title: 'Detail',
-                            list: [
+                    <DataTable canDelete={true}
+                    showNew={true}
+                    model={'MarketingBanner'}
+                    preloads={['marketing_campaign', 'seller', 'payment', 'location', 'products', 'banner_position']}
+                    search_queries={['b.name|c.name']}
+                    join_statements={[{seller: 'seller'}, {location: 'location'}]}
+                    buttons={[{ name: 'Participating Products', onclickFn: approveFn, href: hrefFn }]}
 
-                            ]
-                        },
-                    ]
-                }
-                columns={[
-           
-
-            
-                    { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
-                    { label: 'Seller', data: 'name', through: ['seller'] },
-                    { label: 'Image', data: 'img_url', showImg: true },
-                    { label: '', data: 'img_url', showPreview: true },
-                    {
-                        label: 'Approved?', data: 'is_approved', color: [
+                    customCols={
+                        [
                             {
-                                key: false,
-                                value: 'destructive'
+                                title: 'General',
+                                list: [
+                                    'id',
+                               
+                                    {
+                                        label: 'banner_position_id',
+                                        customCols: null,
+                                        selection: 'BannerPosition',
+                                        search_queries: ['a.name'],
+                                        newData: 'name',
+                                        title_key: 'name'
+                                    },
+                                    {
+                                        label: 'location_id',
+                                        customCols: null,
+                                        selection: 'Location',
+                                        search_queries: ['a.name'],
+                                        newData: 'name',
+                                        title_key: 'name'
+                                    },
+                                    {
+                                        label: 'marketing_campaign_id',
+                                        customCols: null,
+                                        selection: 'MarketingCampaign',
+                                        search_queries: ['a.name'],
+                                        newData: 'name',
+                                        title_key: 'name'
+                                    },
+                                    'payment_id',
+                                    {
+                                        label: 'seller_id',
+                                        customCols: null,
+                                        selection: 'Seller',
+                                        search_queries: ['a.name'],
+                                        newData: 'name',
+                                        title_key: 'name'
+                                    },
+                                    { label: 'is_approved', boolean: true },
+                                    { label: 'img_url', upload: true }
+
+
+
+                                ]
                             },
-
                             {
-                                key: true,
-                                value: 'default'
-                            }
+                                title: 'Detail',
+                                list: [
+
+                                ]
+                            },
                         ]
-                    },
-               
-               
+                    }
+                    columns={[
+                        { label: 'Timestamp', data: 'inserted_at', formatDateTime: true, offset: 8 },
+                        { label: 'Cover', data: 'img_url', showImg: true },
+                        { label: '', data: 'img_url', showPreview: true },
+                        // { label: 'Name', data: 'name' },
+                        { label: 'Location', data: 'name', through: ['location'] },
+                        { label: 'Seller', data: 'name', through: ['seller'] },
+
+
+                        {
+                            label: 'Approved?', data: 'is_approved', color: [
+                                {
+                                    key: false,
+                                    value: 'destructive'
+                                },
+
+                                {
+                                    key: true,
+                                    value: 'default'
+                                }
+                            ]
+                        },
+                        { label: 'Payment', data: 'payment', showJson: true },
+                        { label: 'Products', data: 'products', showJson: true },
 
 
 
 
+                    ]}
 
 
-                ]}
-
-
-            />
+                />
+                </div>
+            </ModelProvider>
         </div>
     )
 }
