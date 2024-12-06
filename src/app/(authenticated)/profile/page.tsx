@@ -29,8 +29,8 @@ export default function PaymentsPage() {
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
             </div>
-            <div className="grid grid-cols-8">
-                <div className="col-span-2" />
+            <div className="grid grid-cols-4">
+              
                 <div className="col-span-4">
                     <DynamicForm data={user?.userStruct} inputs={colInputs} customCols={[
 

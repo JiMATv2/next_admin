@@ -21,7 +21,7 @@ export default function SellersPage() {
               title: 'General',
               list: [
                 'id',
-                'name',
+                'fullname',
                 'username',
                 'email',
                 'phone',
