@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Box, CreditCard, DollarSign, HomeIcon, LogOut, MapPin, Megaphone, Package, Scale, Settings, ShoppingBag, Tag, UserIcon, Users } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Link from 'next/link'
+import { Toaster } from '@/components/ui/toaster'
 
 
 export default function AuthenticatedLayout({
@@ -109,6 +110,7 @@ export default function AuthenticatedLayout({
           </main>
         </div>
       </div>
+      <Toaster />
     </ProtectedRoute>
   )
 }

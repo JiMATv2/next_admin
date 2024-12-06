@@ -6,7 +6,7 @@ const firebaseConfig = {
   authDomain: "jimat-294609.firebaseapp.com",
   projectId: "jimat-294609",
   storageBucket: "jimat-294609.appspot.com",
-  messagingSenderId: "",
+  messagingSenderId: "552393042714",
   appId: "1:552393042714:web:1d7082f61bc30311821aa3"
 };
 
